@@ -46,7 +46,7 @@ class SensorData{
         this.data = data;
     }
 }
-class DataAcquisition implements Runnable {
+class DataAcquisition{
 
     private MainActivity mContext;
     private SensorManager mSensorManager = null;
@@ -68,9 +68,9 @@ class DataAcquisition implements Runnable {
      * Sets up folder and file to log the file on it
      */
 
-    @Override
-    public void run() {
+    public void configure() {
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
+        Log.e("tesst", mSensorManager.getSensorList(Sensor.TYPE_GYROSCOPE_UNCALIBRATED).toString());
         mHandlerThread = new HandlerThread("AccelerometerLogListener");
         mHandlerThread.start();
         threadHandler = new Handler(mHandlerThread.getLooper()){
@@ -79,9 +79,9 @@ class DataAcquisition implements Runnable {
                 Bundle msgBundle = new Bundle();
                 //msgBundle.putString("result", formatted);
                 Message msg = new Message();
-                ArrayList<ArrayList<SensorData>> toSend = new ArrayList<>(2);
+                ArrayList<ArrayList<SensorData>> toSend = new ArrayList<>(1);
                 toSend.add(bufferAcc);
-                toSend.add(bufferGyro);
+                //toSend.add(bufferGyro);
                 msg.obj=toSend;
                 //sg.setData(msgBundle);
                 mainHandler.sendMessage(msg);
@@ -91,13 +91,14 @@ class DataAcquisition implements Runnable {
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
                 if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                    bufferAcc.add(new SensorData(sensorEvent.timestamp,sensorEvent.values.clone()));
+                    bufferAcc.add(new SensorData(i,sensorEvent.values.clone()));
 
 
-                }else if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-                    bufferGyro.add(new SensorData(sensorEvent.timestamp,sensorEvent.values));
+                }/*else if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                    bufferGyro.add(new SensorData(sensorEvent.timestamp,sensorEvent.values.clone()));
+                    Log.e("test", String.valueOf(formatted));
 
-                }
+                }*/
                 formatted = String.valueOf(sensorEvent.timestamp)
                         + "\t" + String.valueOf(Thread.currentThread().getName())
                         + "\t" + String.valueOf(sensorEvent.values[0])
@@ -105,7 +106,7 @@ class DataAcquisition implements Runnable {
                         + "\t" + String.valueOf(sensorEvent.values[2])
                         + "\r\n";
                 i++;
-                Log.e("test", String.valueOf(formatted));
+
                 if(bufferAcc.size()>50)
                 {
                     bufferAcc.remove(0);
@@ -128,13 +129,12 @@ class DataAcquisition implements Runnable {
                                         mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                                         SensorManager.SENSOR_DELAY_NORMAL,
                                         threadHandler);
-        mSensorManager.registerListener(mListener,
+        Log.e("test",String.valueOf(mSensorManager.registerListener(mListener,
                                         mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
                                         SensorManager.SENSOR_DELAY_NORMAL,
-                                        threadHandler);
+                                        threadHandler)));
     }
     public void onResume() {
-        if(mSensorManager.)
         mSensorManager.registerListener(mListener,
                 mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                 SensorManager.SENSOR_DELAY_NORMAL,
