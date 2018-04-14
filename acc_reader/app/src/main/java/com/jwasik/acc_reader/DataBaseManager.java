@@ -35,15 +35,19 @@ public class DataBaseManager extends SQLiteOpenHelper {
         return 0;
     }
 
-    public void readTable() {
+    public String readTable(String table) {
         SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM data_15", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + table, null);
+        String csvFile="timestamp,x,y,z\n";
         while(cursor.moveToNext()){
             int timestamp = cursor.getInt(0);
-            float y = cursor.getFloat(1);
-            float z = cursor.getFloat(2);
-            Log.e("tag", String.valueOf(timestamp) + ", " + String.valueOf(y));
+            float x = cursor.getFloat(1);
+            float y = cursor.getFloat(2);
+            float z = cursor.getFloat(3);
+            csvFile+=String.format("%d:%f:%f:%f\n", timestamp, x,y,z);
         }
+        Log.e("csv to send:", csvFile);
+        return csvFile;
     }
 
     public int insertIntoResultsTable(String result) {

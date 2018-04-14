@@ -83,9 +83,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 client.connect(TCPClient.TcpClientMode.FILE_MODE);
-                client.sendMessage("Halo tu klient!");
-                client.sendMessage("Halo tu klient po raz drugi!");
-
+                client.sendMessage(uploader.readTable("data_40"));
                 client.disconnect();
                 Log.e("aaaaaaaaaaaaaaaaaaa", client.connectionHT.getState().toString());
                 Log.e("aaaaaaaaaaaaaaaaaaa", String.valueOf(Thread.activeCount()));
@@ -95,9 +93,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 configurator.getHandler().sendEmptyMessage(0);
-                Log.e("aaaaaaaaaaaaaaaaaaa", client.connectionHT.getState().toString());
-                Log.e("aaaaaaaaaaaaaaaaaaa", client.disconnectionHT.getState().toString());
-                Log.e("aaaaaaaaaaaaaaaaaaa", client.sendHT.getState().toString());
+               // Log.e("aaaaaaaaaaaaaaaaaaa", client.connectionHT.getState().toString());
+                //Log.e("aaaaaaaaaaaaaaaaaaa", client.sendHT.getState().toString());
                 // for(String elem: runnable.buffer)
                 //   Log.e("data", elem);
             }

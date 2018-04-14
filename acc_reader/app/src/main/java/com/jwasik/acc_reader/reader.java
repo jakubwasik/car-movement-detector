@@ -11,13 +11,18 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+import android.text.format.DateFormat;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by Saeid on 22-4-2014.
@@ -57,8 +62,8 @@ class DataAcquisition{
     public Handler mainHandler;
     public String formatted;
     long i = 0;
-    public ArrayList<SensorData> bufferAcc = new ArrayList<SensorData>(50);
-    public ArrayList<SensorData> bufferGyro = new ArrayList<SensorData>(50);
+    public ArrayList<SensorData> bufferAcc = new ArrayList<SensorData>(200);
+    public ArrayList<SensorData> bufferGyro = new ArrayList<SensorData>(200);
     DataAcquisition(MainActivity context, Handler mainHandler) {
         mContext = context;
         this.mainHandler = mainHandler;
@@ -99,7 +104,9 @@ class DataAcquisition{
                     Log.e("test", String.valueOf(formatted));
 
                 }*/
-                formatted = String.valueOf(sensorEvent.timestamp)
+                Date currentTime = Calendar.getInstance().getTime();
+                String date = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss:SSS").format(currentTime);
+                formatted = date
                         + "\t" + String.valueOf(Thread.currentThread().getName())
                         + "\t" + String.valueOf(sensorEvent.values[0])
                         + "\t" + String.valueOf(sensorEvent.values[1])
@@ -107,15 +114,16 @@ class DataAcquisition{
                         + "\r\n";
                 i++;
 
-                if(bufferAcc.size()>50)
+                if(bufferAcc.size()>200)
                 {
                     bufferAcc.remove(0);
                 }
-                if(bufferGyro.size()>50)
+                if(bufferGyro.size()>200)
                 {
                     bufferGyro.remove(0);
                 }
-                //Log.e("test", formatted);
+
+
                 //if (mIsServiceStarted && mFileStream != null && mLogFile.exists()) {
             }
 
@@ -127,7 +135,7 @@ class DataAcquisition{
 
         mSensorManager.registerListener(mListener,
                                         mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                                        SensorManager.SENSOR_DELAY_NORMAL,
+                                        SensorManager.SENSOR_DELAY_GAME,
                                         threadHandler);
         Log.e("test",String.valueOf(mSensorManager.registerListener(mListener,
                                         mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
