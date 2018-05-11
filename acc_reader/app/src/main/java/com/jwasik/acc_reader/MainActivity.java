@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -74,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         this.init();
         GridView gv = findViewById(R.id.gv);
 
@@ -137,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
     private void configure_event_file() {
         String date = df.format("yyyy-MM-dd-HH-mm-ss", new java.util.Date()).toString();
 
-        String filename = "events" + date + ".csv";
+        String filename = "events_" + date + ".csv";
         fobj.mkdirs();
         newfile = new File(fobj, filename);
         try {
@@ -178,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
     public void onStart() {
         super.onStart();
         if (VERBOSE) Log.e(TAG, "++ ON START ++");
-        configurator.onStart();
+        //configurator.onStart();
     }
 
     @Override
@@ -197,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
     public void onStop() {
         super.onStop();
         if (VERBOSE) Log.e(TAG, "-- ON STOP --");
-        configurator.onStop();
+        //configurator.onStop();
     }
 
     @Override

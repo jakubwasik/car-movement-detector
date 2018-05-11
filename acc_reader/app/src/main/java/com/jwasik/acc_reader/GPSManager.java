@@ -50,7 +50,7 @@ public class GPSManager extends Service implements LocationListener {
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 0; // 10 meters
 
     // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 0; // 1 minute
+    private static final long MIN_TIME_BW_UPDATES = 0;
     GPSManager(Context context){
         this.mContext = context;
 
@@ -98,7 +98,7 @@ public class GPSManager extends Service implements LocationListener {
         fobj = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), "testy");
         fobj.mkdirs();
         boolean gps_enabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        if(gps_enabled){
+        if(true){ //gps_enabled
             try{
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                         MIN_TIME_BW_UPDATES,
@@ -118,10 +118,8 @@ public class GPSManager extends Service implements LocationListener {
         }catch(Exception ex){
 
         }
-
         return gps_enabled;
     }
-    public void writeFile(){}
     public void stopUsingGPS(){
         if(locationManager != null){
             locationManager.removeUpdates(GPSManager.this);
