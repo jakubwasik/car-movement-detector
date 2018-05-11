@@ -69,7 +69,6 @@ public class GPSManager extends Service implements LocationListener {
         return -1;
     }
     public double getLongitude(){
-
         try{
             Location loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             return loc.getLongitude();
@@ -98,9 +97,32 @@ public class GPSManager extends Service implements LocationListener {
         fobj = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), "testy");
         fobj.mkdirs();
         boolean gps_enabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        if(true){ //gps_enabled
+        if(gps_enabled){ //gps_enabled
             try{
+                //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                  //      MIN_TIME_BW_UPDATES,
+                    //    MIN_DISTANCE_CHANGE_FOR_UPDATES,88
+                      //  this);
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                        MIN_TIME_BW_UPDATES,
+                        MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                        this);
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                        MIN_TIME_BW_UPDATES,
+                        MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                        this);
+            }catch(SecurityException e){
+                Log.e("GPS Enabled", e.getMessage());
+                gps_enabled = false;
+            }
+        }
+        else{
+            try{
+                //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                //      MIN_TIME_BW_UPDATES,
+                //    MIN_DISTANCE_CHANGE_FOR_UPDATES,88
+                //  this);
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
                         MIN_TIME_BW_UPDATES,
                         MIN_DISTANCE_CHANGE_FOR_UPDATES,
                         this);
@@ -187,16 +209,6 @@ public class GPSManager extends Service implements LocationListener {
         @Override
         public void run() {
             try{
-                if ( createNewFile){
-                    String date = df.format("yyyy-MM-dd-HH-mm-ss", new java.util.Date()).toString();
-                    Log.e("FileName", String.valueOf(createNewFile));
-                    String filename = "gps_data_" + date + ".csv";
-                    stream.flush();
-                    stream.close();
-                    newfile = new File(fobj, filename);
-                    stream = new FileOutputStream(newfile);
-                    createNewFile= false;
-                }
                 Date currentTime = Calendar.getInstance().getTime();
                 String date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss:SSS").format(currentTime);
                 String toWrite =  date

@@ -280,9 +280,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             try {
-                latitude.setText(String.valueOf(gps.getLatitude()));
-                longitude.setText(String.valueOf(gps.getLongitude()));
-                speed.setText(String.valueOf(gps.getSpeed()*3.6));
+                latitude.setText(String.valueOf(gps.latitude));
+                longitude.setText(String.valueOf(gps.longitude));
+                speed.setText(String.valueOf(gps.speed*3.6));
             } catch (Exception e) {
                 // TODO: handle exception
             } finally {

@@ -32,7 +32,6 @@ class DataAcquisition{
     private SensorEventListener mListener;
     private HandlerThread mHandlerThread;
     public Handler mainHandler;
-    private boolean createNewFile = false;
     public Handler fileSizeHandler;
     public DateFormat df;
     long i = 0;
@@ -40,8 +39,6 @@ class DataAcquisition{
     private File fobj;
     private boolean configured = false;
     FileOutputStream stream;
-    Runnable monitorTask = new fileSizeMonitor();
-    HandlerThread fileSizeHandlerThread;
     private Handler threadHandler ;
     DataAcquisition(MainActivity context, Handler mainHandler) {
         mContext = context;
@@ -69,28 +66,12 @@ class DataAcquisition{
         }catch(Exception ex){
             Log.e("tag",  ex.getMessage() );
         }
-        fileSizeHandlerThread = new HandlerThread("fileSizeHandlerThread");
-        fileSizeHandlerThread.start();
-        fileSizeHandler = new Handler(fileSizeHandlerThread.getLooper());
-        fileSizeHandler.postDelayed(monitorTask, 5000);
-
-
         Log.e("tesst", mSensorManager.getSensorList(Sensor.TYPE_GYROSCOPE_UNCALIBRATED).toString());
         mListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
                 if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                     try{
-                        if ( createNewFile){
-                            String date = df.format("yyyy-MM-dd-HH-mm-ss", new java.util.Date()).toString();
-                            Log.e("FileName", date);
-                            String filename = "raw_data_" + date + ".csv";
-                            stream.flush();
-                            stream.close();
-                            newfile = new File(fobj, filename);
-                            stream = new FileOutputStream(newfile);
-                            createNewFile= false;
-                        }
                         Date currentTime = Calendar.getInstance().getTime();
                         String date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss:SSS").format(currentTime);
                         String toWrite =  date
@@ -103,15 +84,8 @@ class DataAcquisition{
                         Log.e("TE3ST", ex.getMessage().toString());
                     }
 
-                }/*else if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-                    bufferGyro.add(new SensorData(sensorEvent.timestamp,sensorEvent.values.clone()));
-                    Log.e("test", String.valueOf(formatted));
-
-                }*/
-                i++;
-                //if (mIsServiceStarted && mFileStream != null && mLogFile.exists()) {
+                }
             }
-
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
@@ -133,10 +107,6 @@ class DataAcquisition{
         if(configured){
             mSensorManager.registerListener(mListener,
                     mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                    SensorManager.SENSOR_DELAY_NORMAL,
-                    threadHandler);
-            mSensorManager.registerListener(mListener,
-                    mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
                     SensorManager.SENSOR_DELAY_NORMAL,
                     threadHandler);
         }
@@ -162,33 +132,10 @@ class DataAcquisition{
 
         if(mHandlerThread.isAlive())
             mHandlerThread.quitSafely();
-        fileSizeHandler.removeCallbacks(monitorTask);
-        fileSizeHandlerThread.quit();
         configured = false;
     }
     public Handler getHandler() {
         return threadHandler;
-    }
-
-    class fileSizeMonitor implements Runnable{
-        @Override
-        public void run() {
-            try{
-                String test = "background";
-                if(newfile.length()/1024 > 5000000){
-                    createNewFile = true;
-                    Log.e("Filesize monitor", test);
-                }
-
-            }
-            catch (Exception e) {
-                // TODO: handle exception
-            }
-            finally{
-                //also call the same runnable to call it at regular interval
-                fileSizeHandler.postDelayed(this, 5000);
-            }
-        }
     }
 }
 
