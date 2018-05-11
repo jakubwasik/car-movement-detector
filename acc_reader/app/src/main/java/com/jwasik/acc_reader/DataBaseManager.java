@@ -1,5 +1,5 @@
 package com.jwasik.acc_reader;
-
+/*
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -78,3 +78,4 @@ public class DataBaseManager extends SQLiteOpenHelper {
     }
 }
 
+*/
