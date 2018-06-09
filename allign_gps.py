@@ -27,6 +27,7 @@ for file in glob.glob(os.path.join(FILE,"*2018*2018*")):
     shutil.copy2(file, OUT_FILE)
 
 for file in glob.glob(os.path.join(TEST_FILE,"*gps*")):
+    print file
     data = pd.read_csv(file, sep=",", index_col=False)
     prev_speed = data["speed"][0]
     for i in range(len(data["speed"])):

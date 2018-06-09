@@ -64,12 +64,12 @@ for event_file in glob.glob(os.path.join(RAW_EVENTS_FILE, "*")):
             if labeled_event_data["event"][i_candidate] == event_data["event"][i]:
                 k+=1
                 results[event_data["event"][i]] += 1
-                print event_data["event"][i]
-                event_data["event"][i] += "_OK"
+                #print event_data["event"][i]
+                #event_data["event"][i] += "_OK"
             elif candidate < timedelta(seconds=3) and event_data["event"][i] == "indle":
                 k += 1
                 results[event_data["event"][i]] += 1
-                event_data["event"][i] += "_OK"
+                #event_data["event"][i] += "_OK"
             else:
                 pass
                 #print event_data["event"][i],  labeled_event_data["event"][i_candidate]
@@ -77,15 +77,15 @@ for event_file in glob.glob(os.path.join(RAW_EVENTS_FILE, "*")):
         else:
             if event_data["event"][i] == "indle":
                 results[event_data["event"][i]] += 1
-                event_data["event"][i] += "_OK"
+                #event_data["event"][i] += "_OK"
                 k += 1
                 #print "No candidate"
         all += 1
     #event_data.to_csv(os.path.join(OUT_FILE, os.path.basename(event_file)), index=False)
 
 
-print k, all
-print float(k)/float(all)
+print "\nSUCCESS RATE ALL EVENTS: ", float(k)/float(all)
+
 print results
 print total_results
 for key in results:

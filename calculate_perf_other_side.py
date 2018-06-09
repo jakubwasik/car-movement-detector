@@ -65,7 +65,7 @@ for event_file in glob.glob(os.path.join(LABELED_FILE, "*")):
         total_results[event_data["event"][i]] += 1
         total_results_binary[event_data["event"][i]] += 1
         windows_length = event_data["stop"][i] -  event_data["start"][i]
-        print "NEW EVENT:" , windows_length
+        #print "NEW EVENT:" , windows_length
         arr = {}
         # print "test"
         # print event_data["event"][i]
@@ -94,8 +94,8 @@ for event_file in glob.glob(os.path.join(LABELED_FILE, "*")):
                 k_binary += 1
                 results[event_data["event"][i]] += candidate.total_seconds() / WINDOW_SIZE if windows_length > candidate else 1
                 results_binary[event_data["event"][i]] += 1
-                print "OK: ", event_data["event"][i], candidate.total_seconds() / WINDOW_SIZE if windows_length > candidate else 1
-                event_data["event"][i] += "_OK"
+                #print "OK: ", event_data["event"][i], candidate.total_seconds() / WINDOW_SIZE if windows_length > candidate else 1
+                #event_data["event"][i] += "_OK"
             elif candidate < timedelta(round(WINDOW_SIZE/2.0)) and event_data["event"][i] == "indle":
                 # k += 1
                 # results[event_data["event"][i]] += raw_event_data["event"][i_candidate]/ WINDOW_SIZE
@@ -109,8 +109,8 @@ for event_file in glob.glob(os.path.join(LABELED_FILE, "*")):
                         k_binary += 1
                         results[event_data["event"][i]] += arr[key].total_seconds() / WINDOW_SIZE if windows_length > arr[key] else 1
                         results_binary[event_data["event"][i]] += 1
-                        print "TEST: ", event_data["event"][i], arr[key].total_seconds() / WINDOW_SIZE if windows_length > arr[key] else 1
-                        event_data["event"][i] += "_OK"
+                        #print "TEST: ", event_data["event"][i], arr[key].total_seconds() / WINDOW_SIZE if windows_length > arr[key] else 1
+                        #event_data["event"][i] += "_OK"
                         break
                 # print event_data["event"][i],  labeled_event_data["event"][i_candidate]
             # print labeled_event_data["event"][i_candidate]
@@ -127,16 +127,16 @@ for event_file in glob.glob(os.path.join(LABELED_FILE, "*")):
         all_binary +=1
         #event_data.to_csv(os.path.join(RAW_EVENTS_FILE, os.path.basename(event_file)), index=False)
 
-print float(k) / float(all)
-print results
-print total_results
-for key in results:
-    if total_results[key] != 0:
-        print key, float(results[key]) / float(total_results[key])
+##print float(k) / float(all)
+#print results
+#print total_results
+#for key in results:
+#    if total_results[key] != 0:
+#        print key, float(results[key]) / float(total_results[key])
 
-print all
+#print all
 
-print float(k_binary) / float(all_binary)
+print "SUCCESS RATE: ", float(k_binary) / float(all_binary)
 print results_binary
 print total_results_binary
 for key in results_binary:

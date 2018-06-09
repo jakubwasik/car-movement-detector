@@ -5,9 +5,9 @@ from datetime import datetime
 
 DATE_FORMAT_FILE = '%Y-%m-%d_%H_%M_%S'
 DATE_FORMAT_MS = '%d-%m-%Y %H:%M:%S:%f'
-RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized"
-FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_data"
-OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_labeled_data"
+RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized_test"
+FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_test_data"
+OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_labeled_data_test"
 i=0
 for acc_file in glob.glob(os.path.join(RAW_FILE, "raw*")):
     print acc_file
