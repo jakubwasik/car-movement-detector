@@ -232,7 +232,7 @@ def execute(feature_list):
     # print retval["features"].shape
     svr = svm.SVC()
     exponential_range = [pow(10, i) for i in range(-4, 1)]
-    exponential_range = np.logspace(-10, 1, 15 )
+    exponential_range = np.logspace(-10, 1, 20 )
     parameters = {'kernel': ['linear', 'rbf', ], 'C': exponential_range, 'gamma': exponential_range}
     clf = GridSearchCV(svr, parameters, n_jobs=4, verbose=0)
     clf.fit(scaler.transform(retval["features"]), retval["tags"])
@@ -291,6 +291,8 @@ def run_process(process):
     os.system('python {}'.format(process))
 if __name__ == '__main__':
     arr_of_features = []
+    execute(FEATURES)
+    exit(0)
     for i in range(4, len(FEATURES)):
         temp_features = list(FEATURES)
         print "\n\nWITHOUT FEATURE: {0}".format(temp_features[i])
