@@ -99,11 +99,11 @@ if __name__ == '__main__':
     svr = svm.SVC()
     exponential_range = [pow(10, i) for i in range(-4, 1)]
     parameters = {'kernel': ['linear', 'rbf'], 'C': exponential_range, 'gamma': exponential_range}
-    clf = GridSearchCV(svr, parameters, n_jobs=8, verbose=False)
+    clf = GridSearchCV(svr, parameters, n_jobs=4, verbose=False)
     clf.fit(retval["features"], retval["tags"])
     #   print 'Sprawnosc klasyfikatora:'
     #print scores
-    #test_retval = features(FILE_TEST)
+    test_retval = features(FILE_TEST)
 
     y = clf.predict(retval["features"])
     # print y, tags
@@ -112,6 +112,15 @@ if __name__ == '__main__':
         if y[i] != retval["tags"][i]:
             k += 1
             print "\nZLE SKLASYFIKOWANO: ", retval['events'][i], "SKLASYFIKOWANO JAKO: ", y[i],
+    print k
+
+    y1 = clf.predict(test_retval["features"])
+    # print y, tags
+    k = 0
+    for i in range(len(y1)):
+        if y1[i] != test_retval["tags"][i]:
+            k += 1
+            print "\nZLE SKLASYFIKOWANO: ", test_retval['events'][i], "SKLASYFIKOWANO JAKO: ", y1[i],
     print k
     scores = cross_val_score(clf, retval["features"], retval["tags"], cv=10, n_jobs=8, verbose=False)
     print scores

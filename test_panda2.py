@@ -37,11 +37,11 @@ class App(QtGui.QMainWindow, dashboard.Ui_Dashboard):
     ACC_DATA_PATH = "C:\Users\kuba\Desktop\praca magisterska\sensor data\DONOTTOUCH\sensors\\raw_data_*"
     GPS_DATA_PATH = "C:\Users\kuba\Desktop\praca magisterska\sensor data\DONOTTOUCH\sensors\\gps_data_*"
     EVENTS_DATA_PATH = "C:\Users\kuba\Desktop\praca magisterska\sensor data\DONOTTOUCH\sensors\\events*"
-    EVENTS_FROM_RAW_DATA = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\events_from_raw_data_test"
-    EVENTS_FROM_LABELED_DATA = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\events_from_labeled_data_test"
-    ACC_DATA_PATH = "C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized\\raw_data_*"
-    GPS_DATA_PATH = "C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized\\gps_data_*"
-    EVENTS_DATA_PATH = "C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized\\events*"
+    EVENTS_FROM_RAW_DATA = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_raw_data_test"
+    EVENTS_FROM_LABELED_DATA = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_labeled_data_test"
+    #ACC_DATA_PATH = "C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized\\raw_data_*"
+    #GPS_DATA_PATH = "C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized\\gps_data_*"
+    #EVENTS_DATA_PATH = "C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized\\events*"
 
     def custom_plots(self):
         self.myFig_x, self.ax_x = plt.subplots()
@@ -197,9 +197,9 @@ class App(QtGui.QMainWindow, dashboard.Ui_Dashboard):
         self.y_axis_for_events_gps = np.append(self.y_axis_for_events_gps, self.y_axis_for_events_gps)
         self.events_from_raw_file_df = pd.read_csv(
             os.path.join(App.EVENTS_FROM_RAW_DATA, "events_" + os.path.basename(date_file)))
-        self.events_from_raw_file_df["start"] = [datetime.strptime(TIME, App.DATE_FORMAT_MS) for TIME in
+        self.events_from_raw_file_df["start"] = [datetime.strptime(TIME, App.DATE_FORMAT_MS_FOR_LABELED) for TIME in
                                                  self.events_from_raw_file_df['start']]
-        self.events_from_raw_file_df["stop"] = [datetime.strptime(TIME, App.DATE_FORMAT_MS) for TIME in
+        self.events_from_raw_file_df["stop"] = [datetime.strptime(TIME, App.DATE_FORMAT_MS_FOR_LABELED) for TIME in
                                                 self.events_from_raw_file_df['stop']]
 
     def load_labeled_events_from_files(self, date_file):
@@ -277,7 +277,7 @@ class App(QtGui.QMainWindow, dashboard.Ui_Dashboard):
         for file in files:
             print file
             sensors_date_time = datetime.strptime(current_file.split(("_"))[-1], App.DATE_FORMAT_FILE + '.csv')
-            if abs(sensors_date_time - video_date_time) < timedelta(minutes=20):
+            if abs(sensors_date_time - video_date_time) < timedelta(minutes=30):
                 print "FOUND DATAFILE: ", current_file
                 return current_file
             else:
@@ -344,7 +344,7 @@ class App(QtGui.QMainWindow, dashboard.Ui_Dashboard):
                 label.set_fontsize(8)
         if self.show_events.isChecked():
             i_event = self.events_from_raw_file_df['start'].searchsorted(self.data_temp['time'][i])[0]
-            if self.temp[0] != self.events_from_raw_file_df["start"][i_event]: #and self.prev_event!=self.events_from_raw_file_df["event"][i_event]:
+            if self.temp[0] != self.events_from_raw_file_df["start"][i_event] and self.prev_event!=self.events_from_raw_file_df["event"][i_event]:
                 self.prev_event = self.events_from_raw_file_df["event"][i_event]
                 self.temp = [self.events_from_raw_file_df["start"][i_event] for i in range(15)]
                 self.temp.extend([self.events_from_raw_file_df["stop"][i_event] for i in range(15)])

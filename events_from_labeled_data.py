@@ -6,10 +6,11 @@ from datetime import datetime
 DATE_FORMAT_FILE = '%Y-%m-%d_%H_%M_%S'
 DATE_FORMAT_MS = '%d-%m-%Y %H:%M:%S:%f'
 RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized"
-FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_test_data"
-OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\events_from_labeled_data_test"
+FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_data"
+OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_labeled_data"
 i=0
-for acc_file in glob.glob(os.path.join(RAW_FILE, "raw_data*")):
+for acc_file in glob.glob(os.path.join(RAW_FILE, "raw*")):
+    print acc_file
     acc_data = pd.read_csv(acc_file, sep=";", names=["time", "x", "y", "z"])
     start = datetime.strptime(acc_data["time"][0], DATE_FORMAT_MS)
     stop = datetime.strptime(acc_data["time"][len(acc_data) - 1], DATE_FORMAT_MS)

@@ -29,6 +29,7 @@ for file in glob.glob(os.path.join(FILE,"*lewy_2018*")):
     #time[i]=len(x) * 0.02
     time = np.linspace(0, len(data["time"]) * 0.02, len(data["time"]))
     plt.figure(i)
+    plt.grid()
     plt.plot(time, data["x"])
     plt.title(file)
     # plt.title(file)

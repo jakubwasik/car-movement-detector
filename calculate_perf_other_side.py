@@ -2,13 +2,13 @@ import glob
 import os
 import pandas as pd
 from datetime import datetime, timedelta
-
+#import events_from_labeled_data
 DATE_FORMAT_FILE = '%Y-%m-%d_%H_%M_%S'
 DATE_FORMAT_MS = '%Y-%m-%d %H:%M:%S.%f'
 DATE_FORMAT_MS_RAW = '%d-%m-%Y %H:%M:%S:%f'
-RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized"
-RAW_EVENTS_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\events_from_raw_data_test"
-LABELED_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\events_from_labeled_data_test"
+RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized_test"
+RAW_EVENTS_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_raw_data_test"
+LABELED_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_labeled_data_test"
 k = 0
 all = 0
 k_binary = 0
@@ -125,6 +125,7 @@ for event_file in glob.glob(os.path.join(LABELED_FILE, "*")):
             pass
         all += 1
         all_binary +=1
+        #event_data.to_csv(os.path.join(RAW_EVENTS_FILE, os.path.basename(event_file)), index=False)
 
 print float(k) / float(all)
 print results

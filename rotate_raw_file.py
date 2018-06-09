@@ -23,12 +23,12 @@ def get_rotation_matrix(a, b):
     return np.matmul(np.matmul(FFi, G),np.linalg.inv(FFi))
 
 
-DATA_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized"
+DATA_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized_test"
 REF_DATA_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\ref_value"
 # a = pd.read_csv(FILE, sep=";", names= ["time", "x", "y", "z"])
 
-file = os.path.join(DATA_FILE, "raw_data_2018-06-02-20-24-11.csv")
-ref_file = os.path.join(REF_DATA_FILE, "wartosc_referencyjna_2018-06-02-20-23-56_2018-06-02_20_24_12.csv")
+file = os.path.join(DATA_FILE, "raw_data_2018-06-07-08-29-36.csv")
+ref_file = os.path.join(REF_DATA_FILE, "wartosc_referencyjna_2018-06-07-08-29-28_2018-06-07_08_29_36.csv")
 data = pd.read_csv(file, sep=";", names= ["time", "x", "y", "z"])
 ref_data = pd.read_csv(ref_file, sep=",")
 data["x"] = (data["x"] - 0.042336469409452) * 1.003596269268205

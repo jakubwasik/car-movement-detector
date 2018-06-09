@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import glob
 import shutil
-FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\DONOTTOUCH\labeled_data"
+FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\DONOTTOUCH\\labeled_data"
 OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\alligned_speed"
 TEST_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\DONOTTOUCH\test_data"
 TEST_OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\alligned_speed_test"
