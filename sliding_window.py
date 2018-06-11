@@ -264,10 +264,13 @@ def execute(feature_list):
     #clf = GridSearchCV(clf, parameter_grid, n_jobs=4, verbose=0)
     #clf.fit(scaler.transform(retval["features"]), retval["tags"])
 
-
+    arr = [(elem,) for elem in np.arange(3,50)]
+    for i in range(50):
+        arr += [(i, elem) for elem in np.arange(3, 50)]
+        arr += [(elem, i) for elem in np.arange(3, 50)]
     ann = MLPClassifier(verbose=1, warm_start=True, max_iter=200)
     ann_params = {
-        'hidden_layer_sizes' : [(elem,) for elem in np.arange(3,50)] + [(elem, elem) for elem in np.arange(3,50)],
+        'hidden_layer_sizes' : arr,
         'activation' :  ['identity', 'logistic','tanh','relu'],
         'solver': ['lbfgs']
     }
