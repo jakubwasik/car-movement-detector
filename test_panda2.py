@@ -197,9 +197,9 @@ class App(QtGui.QMainWindow, dashboard.Ui_Dashboard):
         self.y_axis_for_events_gps = np.append(self.y_axis_for_events_gps, self.y_axis_for_events_gps)
         self.events_from_raw_file_df = pd.read_csv(
             os.path.join(App.EVENTS_FROM_RAW_DATA, "events_" + os.path.basename(date_file)))
-        self.events_from_raw_file_df["start"] = [datetime.strptime(TIME, App.DATE_FORMAT_MS_FOR_LABELED) for TIME in
+        self.events_from_raw_file_df["start"] = [datetime.strptime(TIME, App.DATE_FORMAT_MS) for TIME in
                                                  self.events_from_raw_file_df['start']]
-        self.events_from_raw_file_df["stop"] = [datetime.strptime(TIME, App.DATE_FORMAT_MS_FOR_LABELED) for TIME in
+        self.events_from_raw_file_df["stop"] = [datetime.strptime(TIME, App.DATE_FORMAT_MS) for TIME in
                                                 self.events_from_raw_file_df['stop']]
 
     def load_labeled_events_from_files(self, date_file):

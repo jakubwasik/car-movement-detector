@@ -1,5 +1,7 @@
 import glob
 import os
+import shutil
+
 import pandas as pd
 from datetime import datetime
 
@@ -9,8 +11,11 @@ RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normali
 FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_test_data"
 OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_labeled_data_test"
 i=0
+
+if os.path.isdir(OUT_FILE):
+    shutil.rmtree(OUT_FILE)
+    os.makedirs(OUT_FILE)
 for acc_file in glob.glob(os.path.join(RAW_FILE, "raw*")):
-    print acc_file
     acc_data = pd.read_csv(acc_file, sep=";", names=["time", "x", "y", "z"])
     start = datetime.strptime(acc_data["time"][0], DATE_FORMAT_MS)
     stop = datetime.strptime(acc_data["time"][len(acc_data) - 1], DATE_FORMAT_MS)
@@ -27,5 +32,3 @@ for acc_file in glob.glob(os.path.join(RAW_FILE, "raw*")):
                                                          stop_event,
                                                          event_name]], columns=["start", "stop", "event"]))
     results.to_csv(os.path.join(OUT_FILE, "events_" + os.path.basename(acc_file)), index=False)
-
-print i
