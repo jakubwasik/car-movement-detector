@@ -18,6 +18,7 @@ from sklearn.model_selection import GridSearchCV, cross_val_score
 from scipy.fftpack import fft
 from scipy.fftpack import fftfreq
 from sklearn.naive_bayes import GaussianNB
+from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, Normalizer
 from sklearn.tree import DecisionTreeClassifier
 
@@ -244,7 +245,7 @@ def execute(feature_list):
     exponential_range = [pow(10, i) for i in range(-4, 1)]
     #exponential_range = np.logspace(-10, 1, 35 )
     parameters = {'kernel': ['linear', 'rbf', ], 'C': exponential_range, 'gamma': exponential_range}
-    clf = GridSearchCV(svr, parameters, n_jobs=4, verbose=0)
+    #clf = GridSearchCV(svr, parameters, n_jobs=4, verbose=0)
     #clf.fit(scaler.transform(retval["features"]), retval["tags"])
     # clf.best_estimator_
 
@@ -261,6 +262,16 @@ def execute(feature_list):
     #clf = GaussianNB()
     #clf = DecisionTreeClassifier()
     #clf = GridSearchCV(clf, parameter_grid, n_jobs=4, verbose=0)
+    #clf.fit(scaler.transform(retval["features"]), retval["tags"])
+
+
+    ann = MLPClassifier(verbose=1, warm_start=True, max_iter=300)
+    ann_params = {
+        'hidden_layer_sizes' : [(elem, elem) for elem in np.arange(3,45)],
+        'activation' :  ['identity', 'logistic','tanh','relu'],
+        'solver': ['lbfgs', 'adam']
+    }
+    clf = GridSearchCV(ann, ann_params, n_jobs=4, verbose=0)
     clf.fit(scaler.transform(retval["features"]), retval["tags"])
     print clf.best_score_
     print clf.best_params_
