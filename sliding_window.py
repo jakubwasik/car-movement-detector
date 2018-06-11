@@ -265,7 +265,7 @@ def execute(feature_list):
     #clf.fit(scaler.transform(retval["features"]), retval["tags"])
 
     arr = [(elem,) for elem in np.arange(3,50)]
-    for i in range(50):
+    for i in range(1,50):
         arr += [(i, elem) for elem in np.arange(3, 50)]
         arr += [(elem, i) for elem in np.arange(3, 50)]
     ann = MLPClassifier(verbose=1, warm_start=True, max_iter=200)
