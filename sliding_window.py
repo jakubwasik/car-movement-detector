@@ -265,11 +265,11 @@ def execute(feature_list):
     #clf.fit(scaler.transform(retval["features"]), retval["tags"])
 
 
-    ann = MLPClassifier(verbose=1, warm_start=True, max_iter=300)
+    ann = MLPClassifier(verbose=1, warm_start=True, max_iter=200)
     ann_params = {
-        'hidden_layer_sizes' : [(elem, elem) for elem in np.arange(3,45)],
+        'hidden_layer_sizes' : [(elem,) for elem in np.arange(3,50)] + [(elem, elem) for elem in np.arange(3,50)],
         'activation' :  ['identity', 'logistic','tanh','relu'],
-        'solver': ['lbfgs', 'adam']
+        'solver': ['lbfgs']
     }
     clf = GridSearchCV(ann, ann_params, n_jobs=4, verbose=0)
     clf.fit(scaler.transform(retval["features"]), retval["tags"])
@@ -317,7 +317,7 @@ def execute(feature_list):
     pool.map(sliding_window, args)
     pool.close()
     pool.join()
-    processes = ('calculate_perf_other_side.py', 'calculate_performance.py')
+    processes = ('calculate_perf_other_side.py', 'calculate_performance.p y')
 
     pool = Pool(processes=2)
     pool.map(run_process, processes)
@@ -329,8 +329,8 @@ def run_process(process):
 
 if __name__ == '__main__':
     arr_of_features = []
-    #run_process("allign_gps.py")
-    #run_process('rorate_matrix.py')
+    run_process("allign_gps.py")
+    run_process('rorate_matrix.py')
     execute(FEATURES)
   #  for i in range(4, len(FEATURES)):
    #     temp_features = list(FEATURES)

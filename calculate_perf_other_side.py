@@ -125,7 +125,7 @@ for event_file in glob.glob(os.path.join(LABELED_FILE, "*")):
             pass
         all += 1
         all_binary +=1
-        event_data.to_csv(os.path.join(LABELED_FILE, os.path.basename(event_file)), index=False)
+        #event_data.to_csv(os.path.join(LABELED_FILE, os.path.basename(event_file)), index=False)
 
 ##print float(k) / float(all)
 #print results
