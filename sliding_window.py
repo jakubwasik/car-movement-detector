@@ -35,9 +35,10 @@ RAW_FILE_TEMP = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_no
 WINDOW_SIZE = int(round(5 * 50))
 FEATURES = ["mean_x", "std_x", "mean_z", "std_z", "speed_mean", "speed_std",
             "range_speed", "energy_x", "energy_z", "signChange","zero_crossings",
-                "energy_dx",
-             "range_z", "range_x", "coeff_x",
-            "coeff_z", "coeff_x_1", "freq_x", "freq_z", "iqr", "var_x", "var_z"]
+            "energy_dx","range_z", "range_x", "coeff_x",
+            "coeff_z", "coeff_x_1", "freq_x", "freq_z", "iqr", "var_x", "var_z",
+            "min_x", "max_x", "min_z", "max_z"]
+            #"h_mean_x", "h_mean_z", "h_mean_speed"]
 
 FREQ = 12
 # "coeff_speed","mean_dx", "mean_dz","std_dx","std_dz","zero_crossings_dx",, "energy_dz"
@@ -94,6 +95,9 @@ def features(filepath, feature_list):
         range_z = z.max() - z.min()
         range_x = x.max() - x.min()
         speed = np.array(gps_data["speed"])
+        #h_mean_x = scipy.stats.hmean(x)
+        #h_mean_z = scipy.stats.hmean(z)
+        #h_mean_speed = scipy.stats.hmean(speed)
         range_speed = speed.max() - speed.min()
         time = np.linspace(0, len(acc_data["time"]) * 0.02, len(acc_data["time"]))
         time_speed = np.linspace(0, len(gps_data["time"]) * 0.02, len(gps_data["time"]))
@@ -110,6 +114,10 @@ def features(filepath, feature_list):
         std_z = np.std(z)
         var_x = np.var(x)
         var_z = np.var(z)
+        min_x = x.min()
+        max_x = x.max()
+        min_z = z.min()
+        max_z = z.max()
         speed_mean = np.mean(speed)
         speed_std = np.std(speed)
         #skew = scipy.stats.skew(x)
@@ -161,10 +169,13 @@ def features_from_window(acc_data, gps_data, feature_list):
     energy_dz = dz.sum()
     energy_x = x.sum()
     energy_z = z.sum()
+    #h_mean_x = scipy.stats.hmean(x)
+    #h_mean_z = scipy.stats.hmean(z)
     zero_crossings_dx = len(np.where(np.diff(np.sign(dx))))
     range_z = z.max() - z.min()
     range_x = x.max() - x.min()
     speed = np.array(gps_data["speed"])
+    #h_mean_speed = scipy.stats.hmean(speed)
     range_speed = speed.max() - speed.min()
     time = np.linspace(0, len(acc_data["time"]) * 0.02, len(acc_data["time"]))
     time_speed = np.linspace(0, len(gps_data["time"]) * 0.02, len(gps_data["time"]))
@@ -179,6 +190,10 @@ def features_from_window(acc_data, gps_data, feature_list):
     std_x = np.std(x)
     mean_z = np.mean(z)
     std_z = np.std(z)
+    min_x = x.min()
+    max_x = x.max()
+    min_z = z.min()
+    max_z = z.max()
     speed_mean = np.mean(speed)
     speed_std = np.std(speed)
     var_x = np.var(x)
@@ -245,8 +260,8 @@ def execute(feature_list):
     exponential_range = [pow(10, i) for i in range(-4, 1)]
     #exponential_range = np.logspace(-10, 1, 35 )
     parameters = {'kernel': ['linear', 'rbf', ], 'C': exponential_range, 'gamma': exponential_range}
-    #clf = GridSearchCV(svr, parameters, n_jobs=4, verbose=0)
-    #clf.fit(scaler.transform(retval["features"]), retval["tags"])
+    clf = GridSearchCV(svr, parameters, n_jobs=4, verbose=0)
+    clf.fit(scaler.transform(retval["features"]), retval["tags"])
     # clf.best_estimator_
 
     parameter_grid = {'max_depth': np.linspace(1, 60, 50, endpoint=True),
@@ -256,7 +271,7 @@ def execute(feature_list):
     #parameter_grid = {
     #    'solver' : ['lsqr'],
     #    'shrinkage': [ 'auto', None],
-    #    'n_components': [np.linspace(20, len(FEATURES)-4, 1, endpoint=True)],
+    #    'n_components': [np.linspa(20, len(FEATURES)-4, 1, endpoint=True)],
     #}
     #clf = LinearDiscriminantAnalysis()
     #clf = GaussianNB()
@@ -268,14 +283,14 @@ def execute(feature_list):
     for i in range(1,50):
         arr += [(i, elem) for elem in np.arange(3, 50)]
         arr += [(elem, i) for elem in np.arange(3, 50)]
-    ann = MLPClassifier(verbose=1, warm_start=True, max_iter=200)
-    ann_params = {
-        'hidden_layer_sizes' : arr,
-        'activation' :  ['identity', 'logistic','tanh','relu'],
-        'solver': ['lbfgs']
-    }
-    clf = GridSearchCV(ann, ann_params, n_jobs=4, verbose=0)
-    clf.fit(scaler.transform(retval["features"]), retval["tags"])
+    #clf = MLPClassifier(activation='tanh',solver='lbfgs',hidden_layer_sizes=(35, 34))
+    #ann_params = {
+    #    'hidden_layer_sizes' : arr,
+    #    'activation' :  ['identity', 'logistic','tanh','relu'],
+    #    'solver': ['lbfgs']
+    #}
+    #clf = GridSearchCV(ann, ann_params, n_jobs=4, verbose=0)
+    #clf.fit(scaler.transform(retval["features"]), retval["tags"])
     print clf.best_score_
     print clf.best_params_
     # model = RFECV(clf.best_estimator_, 40, verbose=3)
@@ -320,7 +335,7 @@ def execute(feature_list):
     pool.map(sliding_window, args)
     pool.close()
     pool.join()
-    processes = ('calculate_perf_other_side.py', 'calculate_performance.p y')
+    processes = ('calculate_perf_other_side.py', 'calculate_performance.py')
 
     pool = Pool(processes=2)
     pool.map(run_process, processes)
@@ -332,8 +347,8 @@ def run_process(process):
 
 if __name__ == '__main__':
     arr_of_features = []
-    run_process("allign_gps.py")
-    run_process('rorate_matrix.py')
+    #run_process("allign_gps.py")
+    #run_process('rorate_matrix.py')
     execute(FEATURES)
   #  for i in range(4, len(FEATURES)):
    #     temp_features = list(FEATURES)
