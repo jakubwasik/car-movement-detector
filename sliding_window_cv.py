@@ -388,10 +388,7 @@ def execute(feature_list):
     if os.path.isdir(RAW_FILE_TEST):
         shutil.rmtree(RAW_FILE_TEST, onerror=handleRemoveReadonly)
         os.makedirs(RAW_FILE_TEST)
-    p1 = Pool(4)
-    p1.map(copy_train_set, train_set)
-    p1.close()
-    p1.join()
+
     if os.path.isdir(OUT_FILE_TEST):
         shutil.rmtree(OUT_FILE_TEST, onerror=handleRemoveReadonly)
         os.makedirs(OUT_FILE_TEST)

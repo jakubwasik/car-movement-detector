@@ -204,7 +204,6 @@ def features_from_window(acc_data, gps_data, feature_list):
     return temp_features
 
 def generate_event_file(raw_data_test):
-    print "### START OF GENERATING EVENT FILE###"
     acc_data = pd.read_csv(raw_data_test, sep=";", names=["time", "x", "y", "z"])
     start = datetime.strptime(acc_data["time"][0], config.DATE_FORMAT_MS)
     stop = datetime.strptime(acc_data["time"][len(acc_data) - 1], config.DATE_FORMAT_MS)
@@ -220,7 +219,6 @@ def generate_event_file(raw_data_test):
                                                          stop_event,
                                                          event_name]], columns=["start", "stop", "event"]))
     results.to_csv(os.path.join(config.EVENTS_F_L_DATA_TEST, "events_" + os.path.basename(raw_data_test)), index=False)
-    print "### END OF GENERATING EVENT FILE###"
 
 def sliding_window(args):
     acc_data = pd.read_csv(args[1], sep=";", names=["time", "x", "y", "z"])
@@ -228,25 +226,26 @@ def sliding_window(args):
     acc_data["time"] = [datetime.strptime(TIME, config.DATE_FORMAT_MS) for TIME in acc_data['time']]
     gps_data["time"] = [datetime.strptime(TIME, config.DATE_FORMAT_MS) for TIME in gps_data['time']]
     results = pd.DataFrame(data=[], columns=["start", "stop", "event"])
-    for i in range(0, len(acc_data) - 600, 150):
-        if i + config.WINDOW_SIZE >= len(acc_data):
+    for i in range(0, len(acc_data) - 600, 100):
+        if i + config.WINDOW_SIZE_SAMPLES >= len(acc_data):
             break
         elif i < 400:
             pass
         else:
             start = gps_data["time"].searchsorted(acc_data["time"][i])[0]
-            stop = gps_data["time"].searchsorted(acc_data["time"][i + config.WINDOW_SIZE])[0]
+            stop = gps_data["time"].searchsorted(acc_data["time"][i + config.WINDOW_SIZE_SAMPLES])[0]
             # print "test: "
             # print acc_data["time"][i], gps_data["time"][start]
-            # print acc_data["time"][i + WINDOW_SIZE], gps_data["time"][stop]
-            features = features_from_window(acc_data[i:i + config.WINDOW_SIZE], gps_data[start:stop], args[3]).reshape(1,-1)
-            features = args[4].transform(features)
+            # print acc_data["time"][i + WINDOW_SIZE_SAMPLES], gps_data["time"][stop]
+            features = features_from_window(acc_data[i:i + config.WINDOW_SIZE_SAMPLES], gps_data[start:stop], args[3]).reshape(1,-1)
+            if args[4] != None:
+                features = args[4].transform(features)
             #print features.shape
             #features = args[4].transform(features)
             event = args[0].predict(features)[0]
             # print [acc_data["time"][i].strftime(DATE_FORMAT_MS), acc_data["time"][i + WINDOW_SIZE].strftime(DATE_FORMAT_MS), event]
             results = results.append(pd.DataFrame(data=[[acc_data["time"][i].strftime(config.DATE_FORMAT_MS),
-                                                         acc_data["time"][i + config.WINDOW_SIZE].strftime(config.DATE_FORMAT_MS),
+                                                         acc_data["time"][i + config.WINDOW_SIZE_SAMPLES].strftime(config.DATE_FORMAT_MS),
                                                          event]], columns=["start", "stop", "event"]))
     results.to_csv(os.path.join(config.EVENTS_F_R_DATA_TEST, "events_" + os.path.basename(args[1])), index=False)
 

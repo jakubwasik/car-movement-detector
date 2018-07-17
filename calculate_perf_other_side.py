@@ -9,7 +9,6 @@ import config
 
 
 def get_success_rate_from_labeled_events():
-    print "### START OF CALCULATING SUCCESS RATE FROM LABELED EVENTS ###"
     total_results = {
         "zatrzymanie_na_swiatlach": 0,
         "przyspieszanie_na_swiatlach": 0,
@@ -85,6 +84,9 @@ def get_success_rate_from_labeled_events():
 
                         arr[j] = min(raw_event_data["stop"][j], event_data["stop"][i]) - max(
                             raw_event_data["start"][j], event_data["start"][i])
+                else:
+                    if arr:
+                        break
             if arr:
                 # print arr
                 candidate = max(arr.values())
@@ -113,15 +115,6 @@ def get_success_rate_from_labeled_events():
                             break
                     # print event_data["event"][i],  labeled_event_data["event"][i_candidate]
                 # print labeled_event_data["event"][i_candidate]
-
-            else:
-                # if event_data["event"][i] == "indle":
-                #    results[event_data["event"][i]] += 1
-                #    print "NIEISTOTNE_2: ", event_data["event"][i]
-                #    event_data["event"][i] += "_OK"
-                #    k += 1
-                # print "No candidate"
-                pass
             all += 1
             all_binary += 1
             # event_data.to_csv(os.path.join(LABELED_FILE, os.path.basename(event_file)), index=False)
@@ -132,7 +125,6 @@ def get_success_rate_from_labeled_events():
     for key in results_binary:
         if total_results_binary[key] != 0:
             print key, float(results_binary[key]) / float(total_results_binary[key])
-    print "### END OF CALCULATING SUCCESS RATE FROM LABELED EVENTS ###"
 ##print float(k) / float(all)
 #print results
 #print total_results
