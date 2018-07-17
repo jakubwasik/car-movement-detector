@@ -2,7 +2,7 @@ import os
 import shutil
 import threading
 from datetime import datetime
-from multiprocessing import Pool, freeze_support
+from multiprocessing import Pool, freeze_support, Process
 import numpy as np
 import pandas as pd
 import glob
@@ -22,7 +22,8 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, Normalizer
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import BaggingClassifier
-
+import calculate_perf_other_side
+import calculate_performance
 import config
 from detect_peaks import detect_peaks
 
@@ -202,6 +203,22 @@ def features_from_window(acc_data, gps_data, feature_list):
         temp_features = np.append(temp_features, locals()[feature])
     return temp_features
 
+def generate_event_file(raw_data_test):
+    acc_data = pd.read_csv(raw_data_test, sep=";", names=["time", "x", "y", "z"])
+    start = datetime.strptime(acc_data["time"][0], config.DATE_FORMAT_MS)
+    stop = datetime.strptime(acc_data["time"][len(acc_data) - 1], config.DATE_FORMAT_MS)
+    results = pd.DataFrame(data=[], columns=["start", "stop", "event"])
+    for event_file in glob.glob(os.path.join(config.NORMALIZED_LABELED_TEST_DATA, "*2018*2018*")):
+        event_start = datetime.strptime(event_file[-23:-4], config.DATE_FORMAT_FILE)
+        if start < event_start and stop > event_start:
+            event_data = pd.read_csv(event_file)
+            start_event = event_data["time"][0]
+            stop_event = event_data["time"][len(event_data) - 1]
+            event_name = os.path.basename(event_file).split('_2018')[0]
+            results = results.append(pd.DataFrame(data=[[start_event,
+                                                         stop_event,
+                                                         event_name]], columns=["start", "stop", "event"]))
+    results.to_csv(os.path.join(config.EVENTS_F_L_DATA_TEST, "events_" + os.path.basename(raw_data_test)), index=False)
 
 def sliding_window(args):
     acc_data = pd.read_csv(args[1], sep=";", names=["time", "x", "y", "z"])
@@ -209,7 +226,7 @@ def sliding_window(args):
     acc_data["time"] = [datetime.strptime(TIME, config.DATE_FORMAT_MS) for TIME in acc_data['time']]
     gps_data["time"] = [datetime.strptime(TIME, config.DATE_FORMAT_MS) for TIME in gps_data['time']]
     results = pd.DataFrame(data=[], columns=["start", "stop", "event"])
-    for i in range(0, len(acc_data) - 600, 150):
+    for i in range(0, len(acc_data) - 600, 200):
         if i + config.WINDOW_SIZE >= len(acc_data):
             break
         elif i < 400:
@@ -318,7 +335,14 @@ def execute(feature_list):
             k += 1
             #print "\nZLE SKLASYFIKOWANO: ", test_retval['events'][i], "SKLASYFIKOWANO JAKO: ", y[i],
     print "ZLE SKLASYFIKOWANO (ALL): {0}".format(k)
-    run_process("events_from_labeled_data.py")
+    if os.path.isdir(config.EVENTS_F_L_DATA_TEST):
+        shutil.rmtree(config.EVENTS_F_L_DATA_TEST)
+        os.makedirs(config.EVENTS_F_L_DATA_TEST)
+    pool = Pool(4)
+    pool.map(generate_event_file,
+             glob.glob(os.path.join(config.NORMALIZED_RAW_DATA_TEST, "raw*")))
+    pool.close()
+    pool.join()
     args = []
     pool = Pool(4)
     for acc_file in glob.glob(os.path.join(config.NORMALIZED_RAW_DATA_TEST, "raw*")):
@@ -328,16 +352,13 @@ def execute(feature_list):
     pool.map(sliding_window, args)
     pool.close()
     pool.join()
-    processes = ('calculate_perf_other_side.py', 'calculate_performance.py')
-
-    pool = Pool(processes=2)
-    pool.map(run_process, processes)
-    pool.close()
-    pool.join()
+    p1 = Process(target=calculate_perf_other_side.get_success_rate_from_labeled_events)
+    p2 = Process(target=calculate_performance.get_success_rate_from_raw_events)
+    p1.start()
+    p2.start()
+    p1.join()
+    p2.join()
     print datetime.now() - start
-
-def run_process(process):
-    os.system('python {}'.format(process))
 
 if __name__ == '__main__':
     arr_of_features = []

@@ -26,3 +26,17 @@ FREQ = 12
 WINDOW_SIZE = int(round(5 * 50))
 
 # specific for events_from_labeled_data.py
+DATE_FORMAT_FILE = '%Y-%m-%d_%H_%M_%S'
+
+#calculate_perf_other_side
+DATE_FORMAT_MS_EVENT = '%Y-%m-%d %H:%M:%S.%f'
+
+#calc_perf
+
+DATE_FORMAT_MS_EVENT = '%Y-%m-%d %H:%M:%S.%f'
+
+RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized_test"
+RAW_EVENTS_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_raw_data_test"
+OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_raw_data_test"
+
+LABELED_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_labeled_data_test"
