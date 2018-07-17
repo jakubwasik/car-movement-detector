@@ -124,7 +124,7 @@ class App(QtGui.QMainWindow, dashboard.Ui_Dashboard):
         filename = filename.replace(" ", "_").split('.')[0]
         filename = filename.replace(":", "_")
         print "ACCELEROMETER LABELED FILENAME: ", filename
-        acc_data_to_be_saved.to_csv("C:\Users\kuba\Desktop\praca magisterska\sensor data\\DONOTTOUCH\\test_data\\" + filename + ".csv",
+        acc_data_to_be_saved.to_csv("C:\Users\kuba\Desktop\praca magisterska\sensor data\\DONOTTOUCH\\labeled_data\\" + filename + ".csv",
                                     header=True, index=False)
         gps_start_index = self.gps_data_temp['time'].searchsorted(self.begin_point_value)
         # print "GPS start index", gps_start_index
@@ -135,7 +135,7 @@ class App(QtGui.QMainWindow, dashboard.Ui_Dashboard):
         filename = unicode(self.tags.currentText()) + "_gps_" + str(self.data_temp["time"][start_index[0]])
         filename = filename.replace(" ", "_").split('.')[0]
         filename = filename.replace(":", "_")
-        gps_data_to_be_saved.to_csv("C:\Users\kuba\Desktop\praca magisterska\sensor data\\DONOTTOUCH\\test_data\\" + filename + ".csv",
+        gps_data_to_be_saved.to_csv("C:\Users\kuba\Desktop\praca magisterska\sensor data\\DONOTTOUCH\\labeled_data\\" + filename + ".csv",
                                     header=True, index=False)
         print "GPS LABELED FILENAME: ", filename
 

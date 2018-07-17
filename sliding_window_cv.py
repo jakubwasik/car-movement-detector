@@ -10,7 +10,7 @@ import glob
 import matplotlib.pyplot as plt
 import scipy
 from sklearn import svm, linear_model, neighbors
-from scipy.signal import butter, lfilter, freqz
+from scipy.signal import butter, lfilter, freqz, welch
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import SelectFromModel, RFE, chi2, SelectKBest, RFECV
@@ -32,16 +32,18 @@ OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_fr
 OUT_FILE_TEST = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_raw_data_test"
 RAW_FILE_TEST = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized_test"
 RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized"
+from detect_peaks import detect_peaks
 WINDOW_SIZE = int(round(5 * 50))
 FEATURES = ["mean_x", "std_x", "mean_z", "std_z", "speed_mean", "speed_std",
-            "range_speed", "energy_x", "energy_z", "signChange", "zero_crossings",
-            "energy_dx",
+            "range_speed", "energy_x", "energy_z", "signChange","zero_crossings",
             "range_z", "range_x", "coeff_x",
-            "coeff_z", "coeff_x_1", "freq_x", "freq_z", "iqr", "var_x", "var_z"]
+            "coeff_z", "coeff_x_1", "freq_x", "freq_z", "iqr", "var_x", "var_z",
+             "min_z", "max_z", "min_x", "max_x", "skew",
+             "autocorr_peaks_x", "fft_peaks_x", "psd_peaks_x",
+            "autocorr_peaks_z", "fft_peaks_z", "psd_peaks_z"]
 
 FREQ = 12
 import errno, os, stat, shutil
-
 
 def handleRemoveReadonly(func, path, exc):
     excvalue = exc[1]
@@ -51,34 +53,42 @@ def handleRemoveReadonly(func, path, exc):
     else:
         raise Exception()
 
+def get_first_n_peaks(x, y, no_peaks=1):
+    x_, y_ = list(x), list(y)
+    if len(x_) >= no_peaks:
+        return x_[:no_peaks], y_[:no_peaks]
+    else:
+        missing_no_peaks = no_peaks - len(x_)
+        return x_ + [0] * missing_no_peaks, y_ + [0] * missing_no_peaks
 
-# "coeff_speed","mean_dx", "mean_dz","std_dx","std_dz","zero_crossings_dx",, "energy_dz"
-def butter_lowpass(cutoff, fs, order=5):
-    nyq = 0.5 * fs
-    normal_cutoff = cutoff / nyq
-    b, a = butter(order, normal_cutoff, btype='low', analog=False)
-    return b, a
+def get_psd_values(y_values, T, N, f_s):
+    f_values, psd_values = welch(y_values, fs=f_s)
+    return f_values, psd_values
 
+def get_fft_values(y_values, T, N, f_s):
+    f_values = np.fft.fftfreq(len(y_values))
+    fft_values_ = fft(y_values)
+    fft_values = 2.0/N * np.abs(fft_values_[0:N//2])
+    return f_values, fft_values
+ 
+def autocorr(x):
+    result = np.correlate(x, x, mode='full')
+    return result[len(result)//2:]
 
-def butter_highpass(cutoff, fs, order=5):
-    nyq = 0.5 * fs
-    normal_cutoff = cutoff / nyq
-    b, a = butter(order, normal_cutoff, btype='highpass', analog=False)
-    return b, a
+def get_autocorr_values(y_values, T, N, f_s):
+    autocorr_values = autocorr(y_values)
+    x_values = np.array([T * jj for jj in range(0, N)])
+    return x_values, autocorr_values
 
+def get_features(x_values, y_values, mph=None):
+    indices_peaks = detect_peaks(y_values, mph=mph)
+    peaks_x, peaks_y = get_first_n_peaks(x_values[indices_peaks], y_values[indices_peaks])
+    return peaks_x + peaks_y
 
-def butter_lowpass_filter(data, cutoff, fs, order=5):
-    b, a = butter_lowpass(cutoff, fs, order=order)
-    y = lfilter(b, a, data)
-    return y
-
-
-def butter_highpass_filter(data, cutoff, fs, order=5):
-    b, a = butter_highpass(cutoff, fs, order=order)
-    y = lfilter(b, a, data)
-    return y
-
-
+def peak_freq(frequencies):
+    freqs = np.fft.fftfreq(len(frequencies))
+    idx = np.argmax(frequencies)
+    return np.abs(50 * freqs[idx])
 def features(filepath, feature_list):
     i = 0
     tags = []
@@ -89,15 +99,19 @@ def features(filepath, feature_list):
         acc_data = pd.read_csv(acc_file[0], sep=",")
         gps_data = pd.read_csv(gps_file, sep=",")
         x = np.array(acc_data["x"])
-        # x = butter_lowpass_filter(x, 4, 50)
-        # x = butter_highpass_filter(x, 0.5, 50)
+        #x = butter_lowpass_filter(x, 4, 50)
+        #x = butter_highpass_filter(x, 0.5, 50)
         z = np.array(acc_data["z"])
-        # z = butter_lowpass_filter(z, 4, 50)
-        # z = butter_highpass_filter(z, 0.5, 50)
+        #z = butter_lowpass_filter(z, 4, 50)
+        #z = butter_highpass_filter(z, 0.5, 50)
         # z=z_new
-        freq_x = np.abs(fft(x))
+        freq_x = 2.0/len(x) * np.abs(fft(x))
+        freq_z = 2.0/len(z) * np.abs(fft(z))
+        #peak_frequency_x = peak_freq(freq_x)
+        #peak_frequency_z = peak_freq(freq_z)
+        fft_energy_x = freq_x.sum()
+        fft_energy_z = freq_z.sum()
         freq_x = freq_x[:FREQ]
-        freq_z = np.abs(fft(z))
         freq_z = freq_z[:FREQ]
         dx = scipy.gradient(x)
         dz = scipy.gradient(z)
@@ -113,6 +127,9 @@ def features(filepath, feature_list):
         range_z = z.max() - z.min()
         range_x = x.max() - x.min()
         speed = np.array(gps_data["speed"])
+        #h_mean_x = scipy.stats.hmean(x)
+        #h_mean_z = scipy.stats.hmean(z)
+        #h_mean_speed = scipy.stats.hmean(speed)
         range_speed = speed.max() - speed.min()
         time = np.linspace(0, len(acc_data["time"]) * 0.02, len(acc_data["time"]))
         time_speed = np.linspace(0, len(gps_data["time"]) * 0.02, len(gps_data["time"]))
@@ -129,21 +146,60 @@ def features(filepath, feature_list):
         std_z = np.std(z)
         var_x = np.var(x)
         var_z = np.var(z)
+        min_x = x.min()
+        max_x = x.max()
+        min_z = z.min()
+        max_z = z.max()
         speed_mean = np.mean(speed)
         speed_std = np.std(speed)
-        # skew = scipy.stats.skew(x)
-        # kurtosis = scipy.stats.kurtosis(x)
-        temp_features = np.array([])
+        skew = scipy.stats.skew(x)
+        kurtosis = scipy.stats.kurtosis(x)
+        #std_x = std_x if std_x != 0 else 0.0001
+        #std_z = std_z if std_z != 0 else 0.0001
+        signal_to_noise_x = mean_x / std_x
+        signal_to_noise_z = mean_z / std_z
+        percentile_x_25 = np.percentile(x, 25)
+        percentile_x_50 = np.percentile(x, 50)
+        percentile_x_75 = np.percentile(x, 75)
+        percentile_z_25 = np.percentile(z, 25)
+        percentile_z_50 = np.percentile(z, 50)
+        percentile_z_75 = np.percentile(z, 75)
+        signal_min_x = np.nanpercentile(x, 5)
+        signal_max_x = np.nanpercentile(x, 100 - 5)
+        # ijk = (100 - 2*percentile)/10
+        mph = signal_min_x + (signal_max_x - signal_min_x) * 0.2
+        N = len(x)
+        f_s = 50
+        t_n = N * f_s
+        T = t_n / N
+        max_peak_height = 0.1 * np.nanmax(x)
+        psd_peaks_x = get_features(*get_psd_values(x, T, N, f_s))
+        fft_peaks_x = get_features(*get_fft_values(x, T, N, f_s))
+        autocorr_peaks_x = get_features(*get_autocorr_values(x, T, N, f_s))
+        signal_min_z = np.nanpercentile(z, 5)
+        signal_max_z = np.nanpercentile(z, 100 - 5)
+        # ijk = (100 - 2*percentile)/10
+        mph = signal_min_z + (signal_max_z - signal_min_z) * 0.2
+        N = len(z)
+        f_s = 50
+        t_n = N * f_s
+        T = t_n / N
+        max_peak_height = 0.1 * np.nanmax(z)
+        psd_peaks_z = get_features(*get_psd_values(z, T, N, f_s))
+        fft_peaks_z = get_features(*get_fft_values(z, T, N, f_s))
+        autocorr_peaks_z = get_features(*get_autocorr_values(z, T, N, f_s))
+        #signal_to_noise_speed = speed_mean / speed_std
+        temp_features=np.array([])
         for feature in feature_list:
-            # print feature, locals()[feature]
-            temp_features = np.append(temp_features, locals()[feature])
-        if i == 0:
+            #print feature, locals()[feature]
+            temp_features=np.append(temp_features, locals()[feature])
+        if i ==0:
             features = np.zeros((len(glob.glob(os.path.join(filepath, "*gps*"))), len(temp_features)))
-        # temp_features = np.array(
+        #temp_features = np.array(
         #    [mean_x, std_x, mean_z, std_z, speed_mean, speed_std, range_speed, energy_x, energy_z, signChange,
         #     zero_crossings, mean_dx, std_dx, mean_dz, std_dz, energy_dx, energy_dz, zero_crossings_dx, range_z, range_x
         #     ])
-        # temp_features = np.concatenate(
+        #temp_features = np.concatenate(
         #    (temp_features, coeff_x, coeff_z, coeff_x_1, coeff_speed, freq_x, freq_z))
         features[i] += temp_features
         tags.append(event.split("\\")[-1])
@@ -161,13 +217,17 @@ def features_from_window(acc_data, gps_data, feature_list):
     tags = []
     events = []
     x = np.array(acc_data["x"])
-    # x = butter_lowpass_filter(x, 4, 50)
+    #x = butter_lowpass_filter(x, 4, 50)
     z = np.array(acc_data["z"])
-    # z = butter_lowpass_filter(z, 4, 50)
-    # z = butter_highpass_filter(z, 0.5, 50)
+    #z = butter_lowpass_filter(z, 4, 50)
+    #z = butter_highpass_filter(z, 0.5, 50)
     # z=z_new
-    freq_x = np.abs(fft(x))
-    freq_z = np.abs(fft(z))
+    freq_x = 2.0 / len(x) * np.abs(fft(x))
+    freq_z = 2.0 / len(z) * np.abs(fft(z))
+    peak_frequency_x = peak_freq(freq_x)
+    peak_frequency_z = peak_freq(freq_z)
+    fft_energy_x = freq_x.sum()
+    fft_energy_z = freq_z.sum()
     freq_x = freq_x[:FREQ]
     freq_z = freq_z[:FREQ]
     dx = scipy.gradient(x)
@@ -180,10 +240,13 @@ def features_from_window(acc_data, gps_data, feature_list):
     energy_dz = dz.sum()
     energy_x = x.sum()
     energy_z = z.sum()
+    #h_mean_x = scipy.stats.hmean(x)
+    #h_mean_z = scipy.stats.hmean(z)
     zero_crossings_dx = len(np.where(np.diff(np.sign(dx))))
     range_z = z.max() - z.min()
     range_x = x.max() - x.min()
     speed = np.array(gps_data["speed"])
+    #h_mean_speed = scipy.stats.hmean(speed)
     range_speed = speed.max() - speed.min()
     time = np.linspace(0, len(acc_data["time"]) * 0.02, len(acc_data["time"]))
     time_speed = np.linspace(0, len(gps_data["time"]) * 0.02, len(gps_data["time"]))
@@ -198,13 +261,54 @@ def features_from_window(acc_data, gps_data, feature_list):
     std_x = np.std(x)
     mean_z = np.mean(z)
     std_z = np.std(z)
+    min_x = x.min()
+    max_x = x.max()
+    min_z = z.min()
+    max_z = z.max()
     speed_mean = np.mean(speed)
     speed_std = np.std(speed)
     var_x = np.var(x)
     var_z = np.var(z)
+    skew = scipy.stats.skew(x)
+    kurtosis = scipy.stats.kurtosis(x)
+    signal_to_noise_x = mean_x / std_x
+    signal_to_noise_z = mean_z / std_z
+    #std_x = std_x if std_x != 0 else 0.0001
+    #std_z = std_z if std_z != 0 else 0.0001
+    percentile_x_25 = np.percentile(x, 25)
+    percentile_x_50 = np.percentile(x, 50)
+    percentile_x_75 = np.percentile(x, 75)
+    percentile_z_25 = np.percentile(z, 25)
+    percentile_z_50 = np.percentile(z, 50)
+    percentile_z_75 = np.percentile(z, 75)
+    signal_min_x = np.nanpercentile(x, 5)
+    signal_max_x = np.nanpercentile(x, 100 - 5)
+    # ijk = (100 - 2*percentile)/10
+    mph = signal_min_x + (signal_max_x - signal_min_x)* 0.2
+    N = len(x)
+    f_s = 50
+    t_n = N * f_s
+    T = t_n / N
+    max_peak_height = 0.1 * np.nanmax(x)
+    psd_peaks_x = get_features(*get_psd_values(x, T, N, f_s))
+    fft_peaks_x = get_features(*get_fft_values(x, T, N, f_s))
+    autocorr_peaks_x = get_features(*get_autocorr_values(x, T, N, f_s))
+    signal_min_z = np.nanpercentile(z, 5)
+    signal_max_z = np.nanpercentile(z, 100 - 5)
+    # ijk = (100 - 2*percentile)/10
+    mph = signal_min_z + (signal_max_z - signal_min_z)* 0.2
+    N = len(z)
+    f_s = 50
+    t_n = N * f_s
+    T = t_n / N
+    max_peak_height = 0.1 * np.nanmax(z)
+    psd_peaks_z = get_features(*get_psd_values(z, T, N, f_s))
+    fft_peaks_z = get_features(*get_fft_values(z, T, N, f_s))
+    autocorr_peaks_z = get_features(*get_autocorr_values(z, T, N, f_s))
+    #signal_to_noise_speed = speed_mean / speed_std
     temp_features = np.array([])
     for feature in feature_list:
-        # print feature, locals()[feature]
+        #print feature, locals()[feature]
         temp_features = np.append(temp_features, locals()[feature])
     # temp_features = np.array(
     #    [mean_x, std_x, mean_z, std_z, speed_mean, speed_std, range_speed, energy_x, energy_z, signChange,
@@ -212,9 +316,9 @@ def features_from_window(acc_data, gps_data, feature_list):
     #     ])
     # temp_features = np.concatenate(
     #    (temp_features, coeff_x, coeff_z, coeff_x_1, coeff_speed, freq_x, freq_z))
-    # skew = scipy.stats.skew(x)
-    # kurtosis = scipy.stats.kurtosis(x)
+
     return temp_features.reshape(1, -1)
+
 
 
 def sliding_window(args):

@@ -1,5 +1,7 @@
 import glob
 import os
+
+import numpy
 import pandas as pd
 from datetime import datetime, timedelta
 #import events_from_labeled_data
@@ -95,22 +97,16 @@ for event_file in glob.glob(os.path.join(LABELED_FILE, "*")):
                 results[event_data["event"][i]] += candidate.total_seconds() / WINDOW_SIZE if windows_length > candidate else 1
                 results_binary[event_data["event"][i]] += 1
                 #print "OK: ", event_data["event"][i], candidate.total_seconds() / WINDOW_SIZE if windows_length > candidate else 1
-                event_data["event"][i] += "_OK"
-            elif candidate < timedelta(round(WINDOW_SIZE/2.0)) and event_data["event"][i] == "indle":
-                # k += 1
-                # results[event_data["event"][i]] += raw_event_data["event"][i_candidate]/ WINDOW_SIZE
-                # print "NIEISTOTNE_1: ", event_data["event"][i]
-                event_data["event"][i] += "_OK"
-                pass
+                #event_data["event"][i] += "_OK"
             else:
                 for key in arr.keys():
-                    if arr[key] > timedelta(seconds=round(WINDOW_SIZE/2.0)) and raw_event_data["event"][key] == event_data["event"][i]:
+                    if arr[key] > timedelta(seconds=numpy.floor(WINDOW_SIZE/2.0)) and raw_event_data["event"][key] == event_data["event"][i]:
                         k += arr[key].total_seconds() / WINDOW_SIZE if windows_length > arr[key] else 1
                         k_binary += 1
                         results[event_data["event"][i]] += arr[key].total_seconds() / WINDOW_SIZE if windows_length > arr[key] else 1
                         results_binary[event_data["event"][i]] += 1
                         #print "TEST: ", event_data["event"][i], arr[key].total_seconds() / WINDOW_SIZE if windows_length > arr[key] else 1
-                        event_data["event"][i] += "_OK"
+                        #event_data["event"][i] += "_OK"
                         break
                 # print event_data["event"][i],  labeled_event_data["event"][i_candidate]
             # print labeled_event_data["event"][i_candidate]

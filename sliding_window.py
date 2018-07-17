@@ -9,7 +9,7 @@ import glob
 import matplotlib.pyplot as plt
 import scipy
 from sklearn import svm, linear_model, neighbors
-from scipy.signal import butter, lfilter, freqz
+from scipy.signal import butter, lfilter, freqz, welch
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
@@ -21,6 +21,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, Normalizer
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import BaggingClassifier
 
 start = datetime.now()
 FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_data"
@@ -32,16 +33,24 @@ OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_fr
 OUT_FILE_TEST = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_raw_data_test"
 RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized_test"
 RAW_FILE_TEMP = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized_test - kopia"
+from detect_peaks import detect_peaks
 WINDOW_SIZE = int(round(5 * 50))
 FEATURES = ["mean_x", "std_x", "mean_z", "std_z", "speed_mean", "speed_std",
             "range_speed", "energy_x", "energy_z", "signChange","zero_crossings",
-            "energy_dx","range_z", "range_x", "coeff_x",
+            "range_z", "range_x", "coeff_x",
             "coeff_z", "coeff_x_1", "freq_x", "freq_z", "iqr", "var_x", "var_z",
-            "min_x", "max_x", "min_z", "max_z"]
+             "min_z", "max_z", "min_x", "max_x", "skew",
+             "autocorr_peaks_x", "fft_peaks_x", "psd_peaks_x",
+            "autocorr_peaks_z", "fft_peaks_z", "psd_peaks_z", "coeff_speed","mean_dx", "mean_dz","std_dx","std_dz","zero_crossings_dx", "energy_dz","energy_dx",
+            "kurtosis",  "signal_to_noise_x", "signal_to_noise_z", "percentile_x_25",
+            "percentile_x_50", "percentile_x_75", "percentile_z_25", "percentile_z_50"]
             #"h_mean_x", "h_mean_z", "h_mean_speed"]
-
+#"skew", "kurtosis"  "signal_to_noise_x", "signal_to_noise_z","percentile_x_25",
+            #"percentile_x_50", "percentile_x_75", "percentile_z_25", "percentile_z_50",
+            #"percentile_z_75","psd_peaks", "fft_peaks",
 FREQ = 12
-# "coeff_speed","mean_dx", "mean_dz","std_dx","std_dz","zero_crossings_dx",, "energy_dz"
+
+# "coeff_speed","mean_dx", "mean_dz","std_dx","std_dz","zero_crossings_dx",, "energy_dz""energy_dx",
 def butter_lowpass(cutoff, fs, order=5):
     nyq = 0.5 * fs
     normal_cutoff = cutoff / nyq
@@ -61,6 +70,43 @@ def butter_highpass_filter(data, cutoff, fs, order=5):
     y = lfilter(b, a, data)
     return y
 
+
+def get_first_n_peaks(x, y, no_peaks=1):
+    x_, y_ = list(x), list(y)
+    if len(x_) >= no_peaks:
+        return x_[:no_peaks], y_[:no_peaks]
+    else:
+        missing_no_peaks = no_peaks - len(x_)
+        return x_ + [0] * missing_no_peaks, y_ + [0] * missing_no_peaks
+
+def get_psd_values(y_values, T, N, f_s):
+    f_values, psd_values = welch(y_values, fs=f_s, nperseg=len(y_values))
+    return f_values, psd_values
+
+def get_fft_values(y_values, T, N, f_s):
+    f_values = np.fft.fftfreq(len(y_values))
+    fft_values_ = fft(y_values)
+    fft_values = 2.0/N * np.abs(fft_values_[0:N//2])
+    return f_values, fft_values
+
+def autocorr(x):
+    result = np.correlate(x, x, mode='full')
+    return result[len(result)//2:]
+
+def get_autocorr_values(y_values, T, N, f_s):
+    autocorr_values = autocorr(y_values)
+    x_values = np.array([T * jj for jj in range(0, N)])
+    return x_values, autocorr_values
+
+def get_features(x_values, y_values, mph=None):
+    indices_peaks = detect_peaks(y_values, mph=mph)
+    peaks_x, peaks_y = get_first_n_peaks(x_values[indices_peaks], y_values[indices_peaks])
+    return peaks_x + peaks_y
+
+def peak_freq(frequencies):
+    freqs = np.fft.fftfreq(len(frequencies))
+    idx = np.argmax(frequencies)
+    return np.abs(50 * freqs[idx])
 def features(filepath, feature_list):
     i = 0
     tags = []
@@ -77,9 +123,13 @@ def features(filepath, feature_list):
         #z = butter_lowpass_filter(z, 4, 50)
         #z = butter_highpass_filter(z, 0.5, 50)
         # z=z_new
-        freq_x = np.abs(fft(x))
+        freq_x = 2.0/len(x) * np.abs(fft(x))
+        freq_z = 2.0/len(z) * np.abs(fft(z))
+        #peak_frequency_x = peak_freq(freq_x)
+        #peak_frequency_z = peak_freq(freq_z)
+        fft_energy_x = freq_x.sum()
+        fft_energy_z = freq_z.sum()
         freq_x = freq_x[:FREQ]
-        freq_z = np.abs(fft(z))
         freq_z = freq_z[:FREQ]
         dx = scipy.gradient(x)
         dz = scipy.gradient(z)
@@ -120,8 +170,43 @@ def features(filepath, feature_list):
         max_z = z.max()
         speed_mean = np.mean(speed)
         speed_std = np.std(speed)
-        #skew = scipy.stats.skew(x)
-        #kurtosis = scipy.stats.kurtosis(x)
+        skew = scipy.stats.skew(x)
+        kurtosis = scipy.stats.kurtosis(x)
+        #std_x = std_x if std_x != 0 else 0.0001
+        #std_z = std_z if std_z != 0 else 0.0001
+        signal_to_noise_x = mean_x / std_x
+        signal_to_noise_z = mean_z / std_z
+        percentile_x_25 = np.percentile(x, 25)
+        percentile_x_50 = np.percentile(x, 50)
+        percentile_x_75 = np.percentile(x, 75)
+        percentile_z_25 = np.percentile(z, 25)
+        percentile_z_50 = np.percentile(z, 50)
+        percentile_z_75 = np.percentile(z, 75)
+        signal_min_x = np.nanpercentile(x, 5)
+        signal_max_x = np.nanpercentile(x, 100 - 5)
+        # ijk = (100 - 2*percentile)/10
+        mph = signal_min_x + (signal_max_x - signal_min_x) * 0.2
+        N = len(x)
+        f_s = 50
+        t_n = N * f_s
+        T = t_n / N
+        max_peak_height = 0.1 * np.nanmax(x)
+        psd_peaks_x = get_features(*get_psd_values(x, T, N, f_s))
+        fft_peaks_x = get_features(*get_fft_values(x, T, N, f_s))
+        autocorr_peaks_x = get_features(*get_autocorr_values(x, T, N, f_s))
+        signal_min_z = np.nanpercentile(z, 5)
+        signal_max_z = np.nanpercentile(z, 100 - 5)
+        # ijk = (100 - 2*percentile)/10
+        mph = signal_min_z + (signal_max_z - signal_min_z) * 0.2
+        N = len(z)
+        f_s = 50
+        t_n = N * f_s
+        T = t_n / N
+        max_peak_height = 0.1 * np.nanmax(z)
+        psd_peaks_z = get_features(*get_psd_values(z, T, N, f_s))
+        fft_peaks_z = get_features(*get_fft_values(z, T, N, f_s))
+        autocorr_peaks_z = get_features(*get_autocorr_values(z, T, N, f_s))
+        #signal_to_noise_speed = speed_mean / speed_std
         temp_features=np.array([])
         for feature in feature_list:
             #print feature, locals()[feature]
@@ -155,8 +240,12 @@ def features_from_window(acc_data, gps_data, feature_list):
     #z = butter_lowpass_filter(z, 4, 50)
     #z = butter_highpass_filter(z, 0.5, 50)
     # z=z_new
-    freq_x = np.abs(fft(x))
-    freq_z = np.abs(fft(z))
+    freq_x = 2.0 / len(x) * np.abs(fft(x))
+    freq_z = 2.0 / len(z) * np.abs(fft(z))
+    peak_frequency_x = peak_freq(freq_x)
+    peak_frequency_z = peak_freq(freq_z)
+    fft_energy_x = freq_x.sum()
+    fft_energy_z = freq_z.sum()
     freq_x = freq_x[:FREQ]
     freq_z = freq_z[:FREQ]
     dx = scipy.gradient(x)
@@ -198,6 +287,43 @@ def features_from_window(acc_data, gps_data, feature_list):
     speed_std = np.std(speed)
     var_x = np.var(x)
     var_z = np.var(z)
+    skew = scipy.stats.skew(x)
+    kurtosis = scipy.stats.kurtosis(x)
+    signal_to_noise_x = mean_x / std_x
+    signal_to_noise_z = mean_z / std_z
+    #std_x = std_x if std_x != 0 else 0.0001
+    #std_z = std_z if std_z != 0 else 0.0001
+    percentile_x_25 = np.percentile(x, 25)
+    percentile_x_50 = np.percentile(x, 50)
+    percentile_x_75 = np.percentile(x, 75)
+    percentile_z_25 = np.percentile(z, 25)
+    percentile_z_50 = np.percentile(z, 50)
+    percentile_z_75 = np.percentile(z, 75)
+    signal_min_x = np.nanpercentile(x, 5)
+    signal_max_x = np.nanpercentile(x, 100 - 5)
+    # ijk = (100 - 2*percentile)/10
+    mph = signal_min_x + (signal_max_x - signal_min_x)* 0.2
+    N = len(x)
+    f_s = 50
+    t_n = N * f_s
+    T = t_n / N
+    max_peak_height = 0.1 * np.nanmax(x)
+    psd_peaks_x = get_features(*get_psd_values(x, T, N, f_s))
+    fft_peaks_x = get_features(*get_fft_values(x, T, N, f_s))
+    autocorr_peaks_x = get_features(*get_autocorr_values(x, T, N, f_s))
+    signal_min_z = np.nanpercentile(z, 5)
+    signal_max_z = np.nanpercentile(z, 100 - 5)
+    # ijk = (100 - 2*percentile)/10
+    mph = signal_min_z + (signal_max_z - signal_min_z)* 0.2
+    N = len(z)
+    f_s = 50
+    t_n = N * f_s
+    T = t_n / N
+    max_peak_height = 0.1 * np.nanmax(z)
+    psd_peaks_z = get_features(*get_psd_values(z, T, N, f_s))
+    fft_peaks_z = get_features(*get_fft_values(z, T, N, f_s))
+    autocorr_peaks_z = get_features(*get_autocorr_values(z, T, N, f_s))
+    #signal_to_noise_speed = speed_mean / speed_std
     temp_features = np.array([])
     for feature in feature_list:
         #print feature, locals()[feature]
@@ -208,8 +334,7 @@ def features_from_window(acc_data, gps_data, feature_list):
     #     ])
     # temp_features = np.concatenate(
     #    (temp_features, coeff_x, coeff_z, coeff_x_1, coeff_speed, freq_x, freq_z))
-    #skew = scipy.stats.skew(x)
-    #kurtosis = scipy.stats.kurtosis(x)
+
     return temp_features.reshape(1, -1)
 
 
@@ -219,7 +344,7 @@ def sliding_window(args):
     acc_data["time"] = [datetime.strptime(TIME, DATE_FORMAT_MS) for TIME in acc_data['time']]
     gps_data["time"] = [datetime.strptime(TIME, DATE_FORMAT_MS) for TIME in gps_data['time']]
     results = pd.DataFrame(data=[], columns=["start", "stop", "event"])
-    for i in range(0, len(acc_data) - 600, 100):
+    for i in range(0, len(acc_data) - 600, 150):
         if i + WINDOW_SIZE >= len(acc_data):
             break
         elif i < 400:
@@ -263,6 +388,10 @@ def execute(feature_list):
     clf = GridSearchCV(svr, parameters, n_jobs=4, verbose=0)
     clf.fit(scaler.transform(retval["features"]), retval["tags"])
     # clf.best_estimator_
+    print clf.best_score_
+    print clf.best_params_
+    #clf = BaggingClassifier(base_estimator=clf, n_estimators=50, random_state=2017, verbose=1,
+    #                            n_jobs=4).fit(scaler.transform(retval["features"]), retval["tags"])
 
     parameter_grid = {'max_depth': np.linspace(1, 60, 50, endpoint=True),
                       'max_features':np.linspace(1, len(FEATURES), 1, endpoint=True),
@@ -291,8 +420,7 @@ def execute(feature_list):
     #}
     #clf = GridSearchCV(ann, ann_params, n_jobs=4, verbose=0)
     #clf.fit(scaler.transform(retval["features"]), retval["tags"])
-    print clf.best_score_
-    print clf.best_params_
+
     # model = RFECV(clf.best_estimator_, 40, verbose=3)
     # retval["features"] = model.fit_transform(retval["features"], retval["tags"])
     # print retval["features"].shape
@@ -342,6 +470,7 @@ def execute(feature_list):
     pool.close()
     pool.join()
     print datetime.now() - start
+
 def run_process(process):
     os.system('python {}'.format(process))
 
@@ -350,10 +479,11 @@ if __name__ == '__main__':
     #run_process("allign_gps.py")
     #run_process('rorate_matrix.py')
     execute(FEATURES)
-  #  for i in range(4, len(FEATURES)):
-   #     temp_features = list(FEATURES)
-    #    print "\n\nWITHOUT FEATURE: {0}".format(temp_features[i])
-     ##  execute(temp_features)
+    #for i in range(4, len(FEATURES)):
+     #   temp_features = list(FEATURES)
+      #  print "\n\nWITHOUT FEATURE: {0}".format(temp_features[i])
+       # del(temp_features[i])
+        #execute(temp_features)
 
     # sliding_window(acc_file=acc_file, gps_file=gps_file)
 

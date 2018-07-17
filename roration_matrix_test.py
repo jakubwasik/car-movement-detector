@@ -21,9 +21,9 @@ def get_rotation_matrix(a, b):
     FFi = np.transpose(FFi)
     return np.matmul(np.matmul(FFi, G),np.linalg.inv(FFi))
 
-U =  get_rotation_matrix(np.array([0.1436521028, 9.71950125, -0.478840338]),np.array([0, 9.73234959014, 0]))
-print U
-print np.matmul(U,np.array([0.1436521028, 9.71950125, -0.478840338]))
+#U =  get_rotation_matrix(np.array([0.1436521028, 9.71950125, -0.478840338]),np.array([0, 9.73234959014, 0]))
+#print U
+#print np.matmul(U,np.array([0.1436521028, 9.71950125, -0.478840338]))
 
 """
 b = a.head(1000)
@@ -35,13 +35,20 @@ z_mean = b["z"][0:10].mean()* 1.0079785882269034
 #print x_mean,y_mean,z_mean
 alpha_z = scipy.arctan2(x_mean, y_mean)
 alpha_x= scipy.arctan2(-z_mean,np.sqrt(x_mean*x_mean+y_mean*y_mean))
-#yaw = scipy.arcco`s(y_mean/np.sqrt(x_mean*x_mean+y_mean*y_mean+x_mean*x_mean))
+#yaw = scipy.arccos(y_mean/np.sqrt(x_mean*x_mean+y_mean*y_mean+x_mean*x_mean))
 
 #print alpha_z * 180 / np.pi
 #print alpha_x * 180 / np.pi
 #print np.sqrt(x_mean*x_mean+y_mean*y_mean+ z_mean*z_mean)
 """
-
+data =pd.read_csv(r"C:\Users\kuba\Desktop\praca magisterska\sensor data\ref_value\wartosc_referencyjna_2018-05-08-18-58-14_2018-05-08_18_55_09.csv")
+data["x"] = (data["x"] - 0.042336469409452) * 1.003596269268205
+data["y"] = (data["y"] + 2.871617087981444e-04) * 1.007048491766642
+data["z"] = (data["z"] - 0.074352817371508) * 0.991392369049382
+print np.sqrt(data["x"].mean() ** 2 + data["y"].mean() ** 2 + data["z"].mean() ** 2)
+print data["x"].mean()
+print data["y"].mean()
+print data["z"].mean()
 
 #Rz = np.array([[np.cos(yaw), - np.sin(yaw), 0],
 #               [np.sin(yaw), np.cos(np.sin(yaw)), 0],

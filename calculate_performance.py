@@ -1,5 +1,7 @@
 import glob
 import os
+
+import numpy
 import pandas as pd
 from datetime import datetime, timedelta
 from sklearn.preprocessing import StandardScaler
@@ -33,6 +35,7 @@ results = {
     "zmiana_pasa_na_prawy":0,
     "zmiana_pasa_na_lewy":0
 }
+WINDOW_SIZE=5.0
 for event_file in glob.glob(os.path.join(RAW_EVENTS_FILE, "*")):
     event_data = pd.read_csv(event_file)
     event_data["start"] = [datetime.strptime(TIME, DATE_FORMAT_MS_RAW) for TIME in event_data["start"]]
@@ -71,9 +74,12 @@ for event_file in glob.glob(os.path.join(RAW_EVENTS_FILE, "*")):
                 results[event_data["event"][i]] += 1
                 #event_data["event"][i] += "_OK"
             else:
-                pass
-                #print event_data["event"][i],  labeled_event_data["event"][i_candidate]
-            # print labeled_event_data["event"][i_candidate]
+                for index in arr.keys():
+                    if arr[index] > timedelta(seconds=numpy.floor(WINDOW_SIZE / 2.0)) and event_data["event"][i] == labeled_event_data["event"][index]:
+                        k += 1
+                        results[event_data["event"][i]] += 1
+                        # event_data["event"][i] += "_OK"
+                        break
         else:
             if event_data["event"][i] == "indle":
                 results[event_data["event"][i]] += 1

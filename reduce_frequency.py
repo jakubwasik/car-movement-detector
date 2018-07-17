@@ -4,11 +4,11 @@ import pandas as pd
 import numpy as np
 import glob
 import matplotlib.pyplot as plt
-FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\DONOTTOUCH\sensors"
+FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized"
 #data = pd.read_csv(FILE, sep=",",
 #                   dtype={"x": np.float, "y": np.float, "z": np.float})
 
-for file in glob.glob(os.path.join(FILE,"raw_data_2018-06-07-17-35-15.csv")):
+for file in glob.glob(os.path.join(FILE,"raw_data_2018-06-10-15-00-58.csv")):
     print file
     data = pd.read_csv(file, sep=";")
     #data =  data[["time",'x','y','z']]

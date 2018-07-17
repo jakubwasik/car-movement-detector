@@ -13,8 +13,9 @@ OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_fr
 i=0
 
 if os.path.isdir(OUT_FILE):
-    shutil.rmtree(OUT_FILE)
-    os.makedirs(OUT_FILE)
+    pass
+    #shutil.rmtree(OUT_FILE)
+    #os.makedirs(OUT_FILE)
 for acc_file in glob.glob(os.path.join(RAW_FILE, "raw*")):
     acc_data = pd.read_csv(acc_file, sep=";", names=["time", "x", "y", "z"])
     start = datetime.strptime(acc_data["time"][0], DATE_FORMAT_MS)
