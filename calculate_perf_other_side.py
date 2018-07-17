@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 DATE_FORMAT_FILE = '%Y-%m-%d_%H_%M_%S'
 DATE_FORMAT_MS = '%Y-%m-%d %H:%M:%S.%f'
 DATE_FORMAT_MS_RAW = '%d-%m-%Y %H:%M:%S:%f'
-RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized_test"
+RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_raw_data_test"
 RAW_EVENTS_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_raw_data_test"
 LABELED_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_labeled_data_test"
 k = 0

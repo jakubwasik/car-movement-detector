@@ -24,15 +24,15 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import BaggingClassifier
 
 start = datetime.now()
-FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_data"
-FILE_TEST = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_test_data"
+FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_labeled_train_data"
+FILE_TEST = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_labeled_test_data"
 # FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\DONOTTOUCH\labeled_data"
 # FILE_TEST = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\DONOTTOUCH\test_data"
 DATE_FORMAT_MS = '%d-%m-%Y %H:%M:%S:%f'
 OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_raw_data"
 OUT_FILE_TEST = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_raw_data_test"
-RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized_test"
-RAW_FILE_TEMP = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized_test - kopia"
+RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_raw_data_test"
+RAW_FILE_TEMP = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_raw_data_test - kopia"
 from detect_peaks import detect_peaks
 WINDOW_SIZE = int(round(5 * 50))
 FEATURES = ["mean_x", "std_x", "mean_z", "std_z", "speed_mean", "speed_std",
