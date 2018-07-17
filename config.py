@@ -27,16 +27,12 @@ WINDOW_SIZE = int(round(5 * 50))
 
 # specific for events_from_labeled_data.py
 DATE_FORMAT_FILE = '%Y-%m-%d_%H_%M_%S'
-
 #calculate_perf_other_side
 DATE_FORMAT_MS_EVENT = '%Y-%m-%d %H:%M:%S.%f'
 
-#calc_perf
+DNT_LABELED_DATA= r"C:\Users\kuba\Desktop\praca magisterska\sensor data\DONOTTOUCH\\labeled_data"
+ALLIGNED_SPEED = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\alligned_speed"
+DNT_TEST_DATA = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\DONOTTOUCH\test_data"
+ALLIGNED_SPEED_TEST = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\alligned_speed_test"
 
-DATE_FORMAT_MS_EVENT = '%Y-%m-%d %H:%M:%S.%f'
-
-RAW_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\sensors_normalized_test"
-RAW_EVENTS_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_raw_data_test"
-OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_raw_data_test"
-
-LABELED_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\tests\events_from_labeled_data_test"
+REF_DATA_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\ref_value"

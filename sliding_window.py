@@ -204,6 +204,7 @@ def features_from_window(acc_data, gps_data, feature_list):
     return temp_features
 
 def generate_event_file(raw_data_test):
+    print "### START OF GENERATING EVENT FILE###"
     acc_data = pd.read_csv(raw_data_test, sep=";", names=["time", "x", "y", "z"])
     start = datetime.strptime(acc_data["time"][0], config.DATE_FORMAT_MS)
     stop = datetime.strptime(acc_data["time"][len(acc_data) - 1], config.DATE_FORMAT_MS)
@@ -219,6 +220,7 @@ def generate_event_file(raw_data_test):
                                                          stop_event,
                                                          event_name]], columns=["start", "stop", "event"]))
     results.to_csv(os.path.join(config.EVENTS_F_L_DATA_TEST, "events_" + os.path.basename(raw_data_test)), index=False)
+    print "### END OF GENERATING EVENT FILE###"
 
 def sliding_window(args):
     acc_data = pd.read_csv(args[1], sep=";", names=["time", "x", "y", "z"])
@@ -226,7 +228,7 @@ def sliding_window(args):
     acc_data["time"] = [datetime.strptime(TIME, config.DATE_FORMAT_MS) for TIME in acc_data['time']]
     gps_data["time"] = [datetime.strptime(TIME, config.DATE_FORMAT_MS) for TIME in gps_data['time']]
     results = pd.DataFrame(data=[], columns=["start", "stop", "event"])
-    for i in range(0, len(acc_data) - 600, 200):
+    for i in range(0, len(acc_data) - 600, 150):
         if i + config.WINDOW_SIZE >= len(acc_data):
             break
         elif i < 400:
@@ -360,10 +362,14 @@ def execute(feature_list):
     p2.join()
     print datetime.now() - start
 
+def run_process(process):
+    os.system('python {}'.format(process))
+
+
 if __name__ == '__main__':
     arr_of_features = []
-    #run_process("allign_gps.py")
-    #run_process('rorate_matrix.py')
+    run_process("allign_gps.py")
+    run_process('rorate_matrix.py')
     execute(config.FEATURES)
     #for i in range(4, len(FEATURES)):
      #   temp_features = list(FEATURES)

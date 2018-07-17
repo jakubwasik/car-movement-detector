@@ -9,6 +9,7 @@ import config
 
 
 def get_success_rate_from_labeled_events():
+    print "### START OF CALCULATING SUCCESS RATE FROM LABELED EVENTS ###"
     total_results = {
         "zatrzymanie_na_swiatlach": 0,
         "przyspieszanie_na_swiatlach": 0,
@@ -131,7 +132,7 @@ def get_success_rate_from_labeled_events():
     for key in results_binary:
         if total_results_binary[key] != 0:
             print key, float(results_binary[key]) / float(total_results_binary[key])
-
+    print "### END OF CALCULATING SUCCESS RATE FROM LABELED EVENTS ###"
 ##print float(k) / float(all)
 #print results
 #print total_results
@@ -140,4 +141,3 @@ def get_success_rate_from_labeled_events():
 #        print key, float(results[key]) / float(total_results[key])
 
 #print all
-
