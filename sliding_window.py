@@ -368,8 +368,8 @@ def run_process(process):
 
 if __name__ == '__main__':
     arr_of_features = []
-    run_process("allign_gps.py")
-    run_process('rorate_matrix.py')
+   # run_process("allign_gps.py")
+   # run_process('rorate_matrix.py')
     execute(config.FEATURES)
     #for i in range(4, len(FEATURES)):
      #   temp_features = list(FEATURES)
