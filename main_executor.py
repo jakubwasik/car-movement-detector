@@ -43,13 +43,14 @@ class loggerFactory:
         return logger
 
 class MainExecutor(object):
-    def __init__(self, normalize_data = True, cross_validation=False):
+    def __init__(self, normalize_data = True, cross_validation=False, features = None):
         self.logger = loggerFactory.getLogger()
         self.now = datetime.now()
         self.clf = None
         self.scaler = None
         self.normalize_data = normalize_data
         self.cv = cross_validation
+        self.features = features if features != None else config.FEATURES
         if self.cv:
             self.test_data = config.WORKSPACE_NORMALIZED_LABELED_TEST_DATA
             self.train_data = config.WORKSPACE_NORMALIZED_LABELED_TRAIN_DATA
@@ -62,9 +63,9 @@ class MainExecutor(object):
             self.train_raw_data = config.NORMALIZED_RAW_DATA
         self.prepare_workspaces()
         self.train_features_vector = sliding_window.features(self.train_data,
-                                                             config.FEATURES)
+                                                             self.features)
         self.test_features_vector = sliding_window.features(self.test_data,
-                                                            config.FEATURES)
+                                                            self.features)
 
     def _set_test_data(self):
         for file in glob.glob(os.path.join(config.NORMALIZED_RAW_DATA_TEST, "*")):
@@ -157,7 +158,7 @@ class MainExecutor(object):
         for acc_file in glob.glob(os.path.join(self.test_raw_data, "raw*")):
             date = acc_file.split("_")[-1]
             gps_file = glob.glob(os.path.join(config.NORMALIZED_RAW_DATA, "gps_data_{0}*".format(date[:-6])))[0]
-            args.append([self.clf, acc_file, gps_file, config.FEATURES, self.scaler])
+            args.append([self.clf, acc_file, gps_file, self.features, self.scaler])
         pool.map(sliding_window.sliding_window, args)
         pool.close()
         pool.join()
@@ -165,20 +166,39 @@ class MainExecutor(object):
 
     def collect_results(self):
         self.logger.info("Collecting results...")
-        p1 = Process(target=calculate_perf_other_side.get_success_rate_from_labeled_events)
-        p2 = Process(target=calculate_performance.get_success_rate_from_raw_events)
-        p1.start()
-        p2.start()
-        p1.join()
-        p2.join()
+       # p1 = Process(target=calculate_perf_other_side.get_success_rate_from_labeled_events)
+       # p2 = Process(target=calculate_performance.get_success_rate_from_raw_events)
+        retval =  calculate_performance.get_success_rate_from_raw_events()
+       #p1.start()
+       # p2.start()
+       # p1.join()
+       # p2.join()
         self.logger.info("Done!")
         print datetime.now() - self.now
+        return retval
 
 
 if __name__ == '__main__':
-    me = MainExecutor()
-    me.train_SVM_classifier()
-    me.test_SVM_classfier()
-    me.generate_event_file()
-    me.run_sliding_window()
-    me.collect_results()
+    prev_value = 0
+    reduced_features = config.FEATURES
+    for j in range(1,len(config.FEATURES)):
+        results = dict()
+        for i in reversed(range(1, len(reduced_features))):
+            temp_features = list(reduced_features)
+            print "\n\nWITHOUT FEATURE: {0}".format(temp_features[i])
+            del (temp_features[i])
+            print "TEMP_FEATURES: ", temp_features
+            me = MainExecutor(features=temp_features)
+            me.train_SVM_classifier()
+            me.test_SVM_classfier()
+            me.generate_event_file()
+            me.run_sliding_window()
+            results[i] = me.collect_results()
+        candidate = max(results.values())
+        if candidate < prev_value:
+            break
+        prev_value = candidate
+        i_candidate = [key for key, value in results.iteritems() if value == candidate][-1]
+        print "deleting: ", reduced_features[i_candidate]
+        del(reduced_features[i_candidate])
+        print "REDUCED FEATURES: ", reduced_features

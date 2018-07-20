@@ -85,6 +85,7 @@ def get_success_rate_from_labeled_events():
                         arr[j] = min(raw_event_data["stop"][j], event_data["stop"][i]) - max(
                             raw_event_data["start"][j], event_data["start"][i])
                 else:
+                    #pass
                     if arr:
                         break
             if arr:

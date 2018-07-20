@@ -63,8 +63,9 @@ def get_success_rate_from_raw_events():
                         arr[j] = min(labeled_event_data["stop"][j], event_data["stop"][i]) - max(
                             labeled_event_data["start"][j], event_data["start"][i])
                 else:
-                    if arr:
-                        break
+                    pass
+                    #if arr:
+                    #    break
             if arr:
                 # print arr
                 candidate = max(arr.values())
@@ -100,6 +101,7 @@ def get_success_rate_from_raw_events():
     print total_results
     for key in results:
         print key, float(results[key]) / float(total_results[key])
+    return float(k) / float(all)
 
 
 
