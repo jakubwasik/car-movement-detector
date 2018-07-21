@@ -16,7 +16,7 @@ WORKSPACE_NORMALIZED_LABELED_TRAIN_DATA = r"C:\Users\PHVD86\Documents\praca_magi
 WORKSPACE_NORMALIZED_LABELED_TEST_DATA = r"C:\Users\PHVD86\Documents\praca_magisterska\car-movement-detector\sensor data\workspaces\workspace_normalized_labeled_test_data"
 WORKSPACES_NORMALIZED_RAW_DATA_TEST= r"C:\Users\PHVD86\Documents\praca_magisterska\car-movement-detector\sensor data\workspaces\workspace_normalized_raw_data_test"
 WORKSPACES_NORMALIZED_RAW_DATA = r"C:\Users\PHVD86\Documents\praca_magisterska\car-movement-detector\sensor data\workspaces\workspace_normalized_raw_data"
-FEATURES = ["mean_x", "std_x", "mean_z", "std_z", "speed_mean", "speed_std",
+FEATURES = ["sin_params", "mean_x", "std_x", "mean_z", "std_z", "speed_mean", "speed_std",
             "range_speed", "energy_x", "energy_z", "signChange","zero_crossings",
             "range_z", "range_x", "coeff_x",
             "coeff_z", "coeff_x_1", "freq_x", "freq_z", "iqr", "var_x", "var_z",

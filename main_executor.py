@@ -237,7 +237,7 @@ class MainExecutor(object):
             print key, float(specific_events_1[key]) / float(specific_events_1_all[key])
 
         print datetime.now() - self.now
-        return success_rate_only_events
+        return success_rate_all
 
 
 if __name__ == '__main__':
