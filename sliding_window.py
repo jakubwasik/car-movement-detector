@@ -24,8 +24,12 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import BaggingClassifier
 import calculate_perf_other_side
 import calculate_performance
-import config
 from detect_peaks import detect_peaks
+import getpass
+if getpass.getuser() == "PHVD86":
+    import config_mot as config
+else:
+    import config
 
 start = datetime.now()
 

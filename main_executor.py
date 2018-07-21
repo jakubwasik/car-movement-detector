@@ -1,5 +1,5 @@
 import logging, os, shutil, glob
-from multiprocessing import Pool, Process, Queue
+from multiprocessing import Pool, Process, Queue, Manager
 import pandas as pd
 from datetime import datetime
 from sklearn import svm
@@ -8,8 +8,13 @@ from sklearn.preprocessing import StandardScaler
 
 import calculate_perf_other_side
 import calculate_performance
-import config
+import getpass
 import sliding_window
+if getpass.getuser() == "PHVD86":
+    import config_mot as config
+else:
+    import config
+
 
 def _copy_train_set(file):
     raw_data = pd.read_csv(file, sep=";", names=["time", "x", "y", "z"])
@@ -66,6 +71,9 @@ class MainExecutor(object):
                                                              self.features)
         self.test_features_vector = sliding_window.features(self.test_data,
                                                             self.features)
+        self.m = Manager()
+        self.q_all = self.m.Queue()
+        self.q_only_events = self.m.Queue()
 
     def _set_test_data(self):
         for file in glob.glob(os.path.join(config.NORMALIZED_RAW_DATA_TEST, "*")):
@@ -94,11 +102,11 @@ class MainExecutor(object):
             self._remove_content(config.WORKSPACE_NORMALIZED_LABELED_TRAIN_DATA)
             self._remove_content(config.WORKSPACES_NORMALIZED_RAW_DATA)
             self._remove_content(config.WORKSPACES_NORMALIZED_RAW_DATA_TEST)
-            p1 = Pool(4)
+            p1 = Pool(8)
             p1.map(_copy_train_set, train_set)
             p1.close()
             p1.join()
-            p2 = Pool(4)
+            p2 = Pool(8)
             p2.map(_copy_test_set, test_set)
             p2.close()
             p2.join()
@@ -112,7 +120,7 @@ class MainExecutor(object):
         exponential_range = [pow(10, i) for i in range(-4, 1)]
         # exponential_range = np.logspace(-10, 1, 35 )
         parameters = {'kernel': ['linear', 'rbf', ], 'C': exponential_range, 'gamma': exponential_range}
-        self.clf = GridSearchCV(svr, parameters, n_jobs=4, verbose=0)
+        self.clf = GridSearchCV(svr, parameters, n_jobs=8, verbose=0)
         if self.normalize_data:
             self.scaler = StandardScaler().fit(self.train_features_vector["features"])
             self.clf.fit(self.scaler.transform(self.train_features_vector["features"]), self.train_features_vector["tags"])
@@ -144,7 +152,7 @@ class MainExecutor(object):
 
     def generate_event_file(self):
         self.logger.info("Generating event file...")
-        pool = Pool(4)
+        pool = Pool(8)
         pool.map(sliding_window.generate_event_file,
                  glob.glob(os.path.join(self.test_raw_data, "raw*")))
         pool.close()
@@ -154,7 +162,7 @@ class MainExecutor(object):
     def run_sliding_window(self):
         self.logger.info("Running sliding window...")
         args = []
-        pool = Pool(4)
+        pool = Pool(8)
         for acc_file in glob.glob(os.path.join(self.test_raw_data, "raw*")):
             date = acc_file.split("_")[-1]
             gps_file = glob.glob(os.path.join(config.NORMALIZED_RAW_DATA, "gps_data_{0}*".format(date[:-6])))[0]
@@ -168,14 +176,35 @@ class MainExecutor(object):
         self.logger.info("Collecting results...")
        # p1 = Process(target=calculate_perf_other_side.get_success_rate_from_labeled_events)
        # p2 = Process(target=calculate_performance.get_success_rate_from_raw_events)
-        retval =  calculate_performance.get_success_rate_from_raw_events()
-       #p1.start()
-       # p2.start()
-       # p1.join()
-       # p2.join()
-        self.logger.info("Done!")
+        p1 = Pool(4)
+
+        p1.map(calculate_performance.get_success_rate_from_raw_events,
+               [(elem, self.q_all) for elem in glob.glob(os.path.join(config.EVENTS_F_R_DATA_TEST, "*"))])
+        p2 = Pool(4)
+        p2.map(calculate_perf_other_side.get_success_rate_from_labeled_events,
+               [(elem, self.q_only_events) for elem in glob.glob(os.path.join(config.EVENTS_F_L_DATA_TEST, "*"))])
+        p1.close()
+        p2.close()
+        p1.join()
+        p2.join()
+        correct_events_q_all = 0
+        all_events_q_all = 0
+        while not self.q_all.empty():
+            temp = self.q_all.get()
+            correct_events_q_all += temp["events"]
+            all_events_q_all += temp["all_events"]
+        success_rate_all = float(correct_events_q_all)/float(all_events_q_all)
+        correct_events_q_only_events = 0
+        all_events_q_only_events = 0
+        while not self.q_only_events.empty():
+            temp = self.q_only_events.get()
+            correct_events_q_only_events += temp["events"]
+            all_events_q_only_events += temp["all_events"]
+        success_rate_only_events = float(correct_events_q_only_events)/float(all_events_q_only_events)
+        self.logger.info("SUCCESS RATE NOTICED EVENTS: {0}".format(success_rate_only_events))
+        self.logger.info("SUCCESS RATE ALL EVENTS: {0}".format(success_rate_all))
         print datetime.now() - self.now
-        return retval
+        return success_rate_only_events
 
 
 if __name__ == '__main__':
