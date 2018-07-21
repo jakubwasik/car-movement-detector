@@ -104,5 +104,6 @@ def get_success_rate_from_raw_events((event_file, queue)):
     #print total_results
     #for key in results:
     #    print key, float(results[key]) / float(total_results[key])
-    queue.put({"events": k,
+    results.update({"events": k,
               "all_events": all})
+    queue.put([results, total_results])

@@ -189,20 +189,53 @@ class MainExecutor(object):
         p2.join()
         correct_events_q_all = 0
         all_events_q_all = 0
+        specific_events_1 = {}
+        specific_events_1_all = {}
+        i = 0
         while not self.q_all.empty():
-            temp = self.q_all.get()
-            correct_events_q_all += temp["events"]
-            all_events_q_all += temp["all_events"]
-        success_rate_all = float(correct_events_q_all)/float(all_events_q_all)
+            temp1, temp2 = self.q_all.get()
+            if i ==0:
+                specific_events_1 = temp1
+                specific_events_1_all = temp2
+            else:
+                for key, value in temp1.iteritems():
+                    specific_events_1[key] += value
+                for key, value in temp2.iteritems():
+                    specific_events_1_all[key] += value
+            i += 1
         correct_events_q_only_events = 0
         all_events_q_only_events = 0
+        specific_events = {}
+        specific_events_all = {}
+        i = 0
         while not self.q_only_events.empty():
-            temp = self.q_only_events.get()
-            correct_events_q_only_events += temp["events"]
-            all_events_q_only_events += temp["all_events"]
-        success_rate_only_events = float(correct_events_q_only_events)/float(all_events_q_only_events)
-        self.logger.info("SUCCESS RATE NOTICED EVENTS: {0}".format(success_rate_only_events))
-        self.logger.info("SUCCESS RATE ALL EVENTS: {0}".format(success_rate_all))
+            temp1, temp2 = self.q_only_events.get()
+            if i == 0:
+                specific_events = temp1
+                specific_events_all = temp2
+            else:
+                for key, value in temp1.iteritems():
+                    specific_events[key] += value
+                for key, value in temp2.iteritems():
+                    specific_events_all[key] += value
+            i+=1
+        success_rate_only_events = float(specific_events["events"]) / float(specific_events["all_events"])
+        print("SUCCESS RATE NOTICED EVENTS: {0}".format(success_rate_only_events))
+        del(specific_events["events"])
+        del(specific_events["all_events"])
+        print specific_events
+        print specific_events_all
+        for key in specific_events_all:
+            print key, float(specific_events[key]) / float(specific_events_all[key])
+        success_rate_all = float(specific_events_1["events"]) / float(specific_events_1["all_events"])
+        print("SUCCESS RATE ALL EVENTS: {0}".format(success_rate_all))
+        del(specific_events_1["events"])
+        del(specific_events_1["all_events"])
+        print specific_events_1
+        print specific_events_1_all
+        for key in specific_events_1_all:
+            print key, float(specific_events_1[key]) / float(specific_events_1_all[key])
+
         print datetime.now() - self.now
         return success_rate_only_events
 
