@@ -8,6 +8,7 @@ import pandas as pd
 import glob
 import matplotlib.pyplot as plt
 import scipy
+from scipy import optimize
 from sklearn import svm, linear_model, neighbors
 from scipy.signal import butter, lfilter, freqz, welch
 import matplotlib.pyplot as plt
@@ -26,7 +27,8 @@ import calculate_perf_other_side
 import calculate_performance
 import config
 from detect_peaks import detect_peaks
-
+def sin_func(x, a, b):
+    return a * np.sin(b * x)
 start = datetime.now()
 
 def butter_lowpass(cutoff, fs, order=5):
@@ -93,11 +95,13 @@ def features(filepath, feature_list):
     for gps_file in glob.glob(os.path.join(filepath, "*gps*")):
         event, date = gps_file.split("_gps_")
         acc_file = glob.glob(os.path.join(filepath, "{event}_2018*{date}".format(**locals())))
+        if not acc_file:
+            continue
         acc_data = pd.read_csv(acc_file[0], sep=",")
         gps_data = pd.read_csv(gps_file, sep=",")
         temp_features = features_from_window(acc_data=acc_data, gps_data=gps_data, feature_list=feature_list)
         if i ==0:
-            features = np.zeros((len(glob.glob(os.path.join(filepath, "*gps*"))), len(temp_features)))
+            features = np.zeros((len(glob.glob(os.path.join(filepath, "*2018*2018*"))), len(temp_features)))
         features[i] += temp_features
         tags.append(event.split("\\")[-1])
         events.append(acc_file)
@@ -197,6 +201,8 @@ def features_from_window(acc_data, gps_data, feature_list):
     psd_peaks_z = get_features(*get_psd_values(z, T, N, f_s))
     fft_peaks_z = get_features(*get_fft_values(z, T, N, f_s))
     autocorr_peaks_z = get_features(*get_autocorr_values(z, T, N, f_s))
+
+    sin_params, params_covariance = optimize.curve_fit(sin_func, time, x, p0=[0, 0])
     #signal_to_noise_speed = speed_mean / speed_std
     temp_features = np.array([])
     for feature in feature_list:

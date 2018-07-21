@@ -25,7 +25,7 @@ FEATURES = ["mean_x", "std_x", "mean_z", "std_z", "speed_mean", "speed_std",
             "autocorr_peaks_z", "fft_peaks_z", "psd_peaks_z", "coeff_speed","mean_dx", "mean_dz","std_dx","std_dz","zero_crossings_dx", "energy_dz","energy_dx",
             "kurtosis",  "signal_to_noise_x", "signal_to_noise_z", "percentile_x_25",
             "percentile_x_50", "percentile_x_75", "percentile_z_25", "percentile_z_50"]
-FEATURES = ['mean_x', 'std_x', 'mean_z', 'std_z', 'speed_mean', 'speed_std', 'energy_x', 'energy_z', 'signChange', 'zero_crossings', 'range_z', 'range_x', 'coeff_x', 'coeff_x_1', 'freq_z', 'iqr', 'var_x', 'var_z', 'min_z', 'max_z', 'min_x', 'max_x', 'skew', 'fft_peaks_x', 'psd_peaks_x', 'autocorr_peaks_z', 'fft_peaks_z', 'psd_peaks_z', 'mean_dx', 'mean_dz', 'std_dx', 'std_dz', 'zero_crossings_dx', 'energy_dz', 'energy_dx', 'kurtosis', 'signal_to_noise_x', 'percentile_x_25', 'percentile_x_50', 'percentile_x_75', 'percentile_z_25']
+FEATURES = ['sin_params','mean_x', 'mean_z', 'std_z', 'speed_mean', 'energy_x', 'signChange', 'range_x', 'coeff_x', 'freq_z', 'var_x', 'var_z', 'min_z', 'max_z', 'min_x', 'skew', 'fft_peaks_x', 'psd_peaks_x', 'autocorr_peaks_z', 'fft_peaks_z', 'psd_peaks_z', 'std_dx', 'energy_dx', 'kurtosis', 'percentile_z_25']
 FREQ = 12
 WINDOW_SIZE = 5.0
 WINDOW_SIZE_SAMPLES = int(round(WINDOW_SIZE * 50))

@@ -9,7 +9,7 @@ from scipy.fftpack import fft
 from scipy.fftpack import fftfreq
 import re
 
-FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_data"
+FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_labeled_train_data"
 test_file = r'C:\Users\kuba\Desktop\praca magisterska\sensor data\alligned_speed_test'
 DATE_FORMAT_MS = '%d-%m-%Y %H:%M:%S:%f'
 i=0
@@ -17,7 +17,7 @@ time = []
 right = np.zeros((10,len(glob.glob(os.path.join(test_file,"*")))))
 time = np.zeros(len(glob.glob(os.path.join(test_file,"*lewy_2*"))))
 
-for file in glob.glob(os.path.join(FILE,"hamowanie_20*")):
+for file in glob.glob(os.path.join(FILE,"zmia*prawy_20*")):
     print file
     #regex = re.sub("za.*ch", "zatrzymanie_na_swiatlach",string=file)
     #print regex
@@ -25,16 +25,16 @@ for file in glob.glob(os.path.join(FILE,"hamowanie_20*")):
     data = pd.read_csv(file, sep=",")
     #obj = glob.glob(os.path.join(test_file, os.path.basename(file)))[0]
     #alligned_data = pd.read_csv(obj, sep=",")
-    x = np.array(data["z"])
+    x = np.array(data["x"])
     #z = np.array(data["z"])
     #time[i]=len(x) * 0.02
     time = np.linspace(0, len(data["time"]) * 0.02, len(data["time"]))
     #plt.figure(i)
     plt.grid()
-    plt.plot(time, data["z"])
-    plt.title("hamowanie")
+    plt.plot(time, data["x"])
+    plt.title(os.path.basename(file))
     plt.xlabel('czas [s]')
-    plt.ylim(-4.5,4.5)
+    #plt.ylim(-4.5,4.5)
     plt.ylabel('przyspieszenie [m/s^2]')
     # plt.title(file)
     #alligned_data["x"].plot()
@@ -49,7 +49,7 @@ for file in glob.glob(os.path.join(FILE,"hamowanie_20*")):
     #coeff_x = np.polyfit(time, data["z"], 3)
     #coeff_z = np.polyfit(time, data["z"], 3)
     #i+=1
-    p = np.poly1d(np.polyfit(time, data["z"], 3))
+    p = np.poly1d(np.polyfit(time, data["x"], 3))
     plt.plot(time, p(time), color ='red')
 
     plt.show()
