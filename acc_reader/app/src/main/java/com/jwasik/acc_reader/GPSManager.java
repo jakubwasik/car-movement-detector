@@ -46,19 +46,23 @@ public class GPSManager extends Service implements LocationListener {
     private boolean createNewFile = false;
     public double speed;
     public DateFormat df;
+    public String MODE;
     // The minimum distance to change Updates in meters
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 0; // 10 meters
 
     // The minimum time between updates in milliseconds
     private static final long MIN_TIME_BW_UPDATES = 0;
-    GPSManager(Context context){
+    GPSManager(Context context, String MODE){
         this.mContext = context;
-
+        this.MODE = MODE;
     }
     public void configure(){
         this.init();
-        gpsHandler.post(new writeToFile());
+        if(this.MODE != "CONTINIOUS_DATA"){
+            gpsHandler.post(new writeToFile());
+        }
     }
+
     public double getLatitude(){
         try{
             Location loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -94,8 +98,10 @@ public class GPSManager extends Service implements LocationListener {
         handlerThread.start();
         gpsHandler = new Handler(handlerThread.getLooper());
         locationManager = (LocationManager) mContext.getSystemService(LOCATION_SERVICE);
-        fobj = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), "testy");
-        fobj.mkdirs();
+        if(this.MODE != "CONTINIOUS_DATA"){
+            fobj = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), "testy");
+            fobj.mkdirs();
+        }
         boolean gps_enabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
         if(gps_enabled){ //gps_enabled
             try{
@@ -131,15 +137,18 @@ public class GPSManager extends Service implements LocationListener {
                 gps_enabled = false;
             }
         }
-        String date = df.format("yyyy-MM-dd-HH-mm-ss", new java.util.Date()).toString();
-        Log.e("FileName", String.valueOf(createNewFile));
-        String filename = "gps_data_" + date + ".csv";
-        newfile = new File(fobj, filename);
-        try{
-            stream = new FileOutputStream(newfile);
-        }catch(Exception ex){
-
+        if(this.MODE != "CONTINIOUS_DATA"){
+            String date = df.format("yyyy-MM-dd-HH-mm-ss", new java.util.Date()).toString();
+            Log.e("FileName", String.valueOf(createNewFile));
+            String filename = "gps_data_" + date + ".csv";
+            newfile = new File(fobj, filename);
+            try{
+                stream = new FileOutputStream(newfile);
+            }catch(Exception ex){
+                //
+            }
         }
+
         return gps_enabled;
     }
     public void stopUsingGPS(){
@@ -195,13 +204,14 @@ public class GPSManager extends Service implements LocationListener {
         }
     }
     public void cleanThread(){
+        if(this.MODE != "CONTINIOUS_DATA"){
             try{
                 stream.close();
             }catch (Exception ex){
                 //todo
             }
+        }
         this.stopUsingGPS();
-
         if(handlerThread.isAlive())
             handlerThread.quitSafely();
     }
@@ -211,20 +221,22 @@ public class GPSManager extends Service implements LocationListener {
             try{
                 Date currentTime = Calendar.getInstance().getTime();
                 String date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss:SSS").format(currentTime);
-                String toWrite =  date
+             /*    String toWrite =  date
                         + ";" + String.valueOf(getLatitude())
                         + ";" + String.valueOf(getLongitude())
                         + ";" + String.valueOf(getSpeed()*3.6)
                         + "\r\n";
 
-                /*
-                String toWrite =  date
-                        + ";" + String.valueOf(latitude)
-                        + ";" + String.valueOf(longitude)
-                        + ";" + String.valueOf(speed*3.6)
-                        + "\r\n";
-                */
-                stream.write(toWrite.getBytes());
+               */
+             if(latitude!= 0 && longitude!=0){
+                 String toWrite =  date
+                         + ";" + String.valueOf(latitude)
+                         + ";" + String.valueOf(longitude)
+                         + ";" + String.valueOf(speed*3.6)
+                         + "\r\n";
+
+                 stream.write(toWrite.getBytes());
+             }
             }
             catch (Exception e) {
                 // TODO: handle exception

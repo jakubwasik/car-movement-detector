@@ -63,7 +63,7 @@ class Client(threading.Thread):
             if mode == "":
                 self.client.close()
                 break
-            print mode
+            print "MODE: ", mode
             dataReceived = ""
             expectedData = int(mode.split(':')[1])
             print "data :" + str(expectedData)
@@ -77,6 +77,8 @@ class Client(threading.Thread):
                     print "Zerwano polaczenie z serverem?"
                     running = 0
             print dataReceived
+            if len(dataReceived) == expectedData:
+                self.client.send("przeslano plik pomyslnie")
             import re
             dataReceived = re.sub(',','.',dataReceived)
             dataReceived = re.sub(':', ',', dataReceived)
