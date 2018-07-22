@@ -2,9 +2,12 @@ import logging, os, shutil, glob
 from multiprocessing import Pool, Process, Queue, Manager
 import pandas as pd
 from datetime import datetime
+
+import sys
 from sklearn import svm
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.preprocessing import StandardScaler
+from sqlalchemy.sql.functions import sysdate
 
 import calculate_perf_other_side
 import calculate_performance
@@ -237,10 +240,17 @@ class MainExecutor(object):
             print key, float(specific_events_1[key]) / float(specific_events_1_all[key])
 
         print datetime.now() - self.now
-        return success_rate_only_events
+        return success_rate_all
 
 
 if __name__ == '__main__':
+    me = MainExecutor(features=config.FEATURES)
+    me.train_SVM_classifier()
+    me.test_SVM_classfier()
+    me.generate_event_file()
+    me.run_sliding_window()
+    me.collect_results()
+    sys.exit(0)
     prev_value = 0
     reduced_features = config.FEATURES
     for j in range(1,len(config.FEATURES)):

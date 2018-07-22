@@ -32,7 +32,7 @@ if getpass.getuser() == "PHVD86":
     import config_mot as config
 else:
     import config
-    
+
 def sin_func(x, a, b):
     return a * np.sin(b * x)
 start = datetime.now()
@@ -208,7 +208,7 @@ def features_from_window(acc_data, gps_data, feature_list):
     fft_peaks_z = get_features(*get_fft_values(z, T, N, f_s))
     autocorr_peaks_z = get_features(*get_autocorr_values(z, T, N, f_s))
 
-    sin_params, params_covariance = optimize.curve_fit(sin_func, time, x, p0=[0, 0])
+    #sin_params, params_covariance = optimize.curve_fit(sin_func, time, x, p0=[0, 0])
     #signal_to_noise_speed = speed_mean / speed_std
     temp_features = np.array([])
     for feature in feature_list:
