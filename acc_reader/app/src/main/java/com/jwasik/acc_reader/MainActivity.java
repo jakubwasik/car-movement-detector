@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private Switch saveToFile;
     private Button sendToServer;
     private Button button;
+    private String MODE = "CONTINIOUS DATA";
     private final int READING_PERMISSIONS = 1;
     private final int WRITING_PERMISSIONS = 2;
     private Handler mainHandler;
@@ -91,14 +92,18 @@ public class MainActivity extends AppCompatActivity {
                     if (!configurator.configure())
                         Toast.makeText(getApplicationContext(), "Unable to start thread(no r/w permission)", Toast.LENGTH_LONG);
                     gps.configure();
-                    configure_event_file();
+                    if(MODE != "CONTINIOUS DATA"){
+                        configure_event_file();
+                    }
                     mainHandler.post(updateGUIRunnable);
                     Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
                     Log.e("active threads", threadSet.toString());
                 } else {
                     configurator.cleanThread();
                     gps.cleanThread();
-                    closeFile();
+                    if(MODE != "CONTINIOUS DATA"){
+                        closeFile();
+                    }
                     mainHandler.removeCallbacks(updateGUIRunnable);
                     Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
                     Log.e("active threads", threadSet.toString());
@@ -108,15 +113,17 @@ public class MainActivity extends AppCompatActivity {
         gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
-                Toast.makeText(MainActivity.this, "" + position,
-                        Toast.LENGTH_SHORT).show();
-                Date currentTime = Calendar.getInstance().getTime();
-                String date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss:SSS").format(currentTime);
-                String toWrite = date + ";" + TAGS[position] + "\r\n";
-                try {
-                    stream.write(toWrite.getBytes());
-                } catch (Exception ex) {
-                    Log.e("TE3ST", ex.getMessage().toString());
+                if(MODE != "CONTINIOUS DATA"){
+                    Toast.makeText(MainActivity.this, "" + position,
+                            Toast.LENGTH_SHORT).show();
+                    Date currentTime = Calendar.getInstance().getTime();
+                    String date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss:SSS").format(currentTime);
+                    String toWrite = date + ";" + TAGS[position] + "\r\n";
+                    try {
+                        stream.write(toWrite.getBytes());
+                    } catch (Exception ex) {
+                        Log.e("TE3ST", ex.getMessage().toString());
+                    }
                 }
             }
         });
@@ -154,11 +161,12 @@ public class MainActivity extends AppCompatActivity {
         latitude = findViewById(R.id.latitude);
         longitude = findViewById(R.id.longitude);
         speed = findViewById(R.id.speed);
-        configurator = new DataAcquisition(MainActivity.this, mainHandler);
-        gps = new GPSManager(this);
+        configurator = new DataAcquisition(MainActivity.this, mainHandler, "CONTINIOUS_DATA");
+        gps = new GPSManager(this, "CONTINIOUS_DATA");
         gps.requestPermissions();
         mainHandler = new Handler();
-        //client = new TCPClient("192.168.1.5", 8888);
+        client = new TCPClient("192.168.1.8", 8888);
+        client.connect(TCPClient.TcpClientMode.FILE_MODE);
     }
 
     @Override
@@ -223,7 +231,6 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("Permissions_read", "permission was granted, yay! ");
 
                 } else {
-
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                 }
@@ -283,11 +290,22 @@ public class MainActivity extends AppCompatActivity {
                 latitude.setText(String.valueOf(gps.latitude));
                 longitude.setText(String.valueOf(gps.longitude));
                 speed.setText(String.valueOf(gps.speed*3.6));
+                if(gps.latitude!= 0 && gps.longitude!=0 ){
+                    String toWrite =
+                            ";" + String.valueOf(configurator.x)
+                                    + ";" + String.valueOf(configurator.y)
+                                    + ";" + String.valueOf(configurator.z)
+                                    + ";" + String.valueOf(gps.latitude)
+                                    + ";" + String.valueOf(gps.longitude)
+                                    + ";" + String.valueOf(gps.speed)
+                                    + "\r\n";
+                    client.sendMessage(toWrite);
+                }
             } catch (Exception e) {
                 // TODO: handle exception
             } finally {
                 //also call the same runnable to call it at regular interval
-                mainHandler.postDelayed(this, 200);
+                mainHandler.postDelayed(this, 20);
             }
         }
     }

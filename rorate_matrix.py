@@ -9,6 +9,8 @@ import pandas as pd
 import scipy
 import matplotlib.pyplot as plt
 
+import config
+
 
 def get_rotation_matrix(a, b):
     a = a / np.linalg.norm(a)
@@ -25,16 +27,12 @@ def get_rotation_matrix(a, b):
     return np.matmul(np.matmul(FFi, G), np.linalg.inv(FFi))
 
 
-DATA_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\alligned_speed"
-DATA_TEST_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\alligned_speed_test"
-REF_DATA_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\ref_value"
-OUT_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_data"
-OUT_TEST_FILE = r"C:\Users\kuba\Desktop\praca magisterska\sensor data\normalized_test_data"
+
 
 
 def rotate_train_matrix(file):
     date = re.search("_2018.*?_", file).group()[1:-1]
-    ref_file = glob.glob(os.path.join(REF_DATA_FILE, "wartosc_referencyjna_{date}*".format(**locals())))
+    ref_file = glob.glob(os.path.join(config.REF_DATA_FILE, "wartosc_referencyjna_{date}*".format(**locals())))
     if ref_file:
         ref_file = ref_file[0]
         data = pd.read_csv(file, sep=",")
@@ -60,14 +58,14 @@ def rotate_train_matrix(file):
         new_data = pd.DataFrame(np_data, columns=['x', 'y', 'z'])
         new_data["time"] = data["time"]
         new_data = new_data[['time', 'x', 'y', 'z']]
-        new_data.to_csv(os.path.join(OUT_FILE, os.path.basename(file)), index=False, sep=',')
+        new_data.to_csv(os.path.join(config.NORMALIZED_LABELED_TRAIN_DATA, os.path.basename(file)), index=False, sep=',')
     else:
         print "couldnt find ref file for: {file}".format(**locals())
 
 
 def rotate_test_matrix(file):
     date = re.search("_2018.*?_", file).group()[1:-1]
-    ref_file = glob.glob(os.path.join(REF_DATA_FILE, "wartosc_referencyjna_{date}*".format(**locals())))
+    ref_file = glob.glob(os.path.join(config.REF_DATA_FILE, "wartosc_referencyjna_{date}*".format(**locals())))
     if ref_file:
         ref_file = ref_file[0]
         data = pd.read_csv(file, sep=",")
@@ -93,36 +91,36 @@ def rotate_test_matrix(file):
         new_data = pd.DataFrame(np_data, columns=['x', 'y', 'z'])
         new_data["time"] = data["time"]
         new_data = new_data[['time', 'x', 'y', 'z']]
-        new_data.to_csv(os.path.join(OUT_TEST_FILE, os.path.basename(file)), index=False, sep=',')
+        new_data.to_csv(os.path.join(config.NORMALIZED_LABELED_TEST_DATA, os.path.basename(file)), index=False, sep=',')
     else:
         print "couldnt find ref file for: {file}".format(**locals())
 
 
 if __name__ == '__main__':
     # a = pd.read_csv(FILE, sep=";", names= ["time", "x", "y", "z"])
-    if os.path.isdir(OUT_FILE):
-        shutil.rmtree(OUT_FILE)
-        os.makedirs(OUT_FILE)
-    if os.path.isdir(OUT_TEST_FILE):
-        shutil.rmtree(OUT_TEST_FILE)
-        os.makedirs(OUT_TEST_FILE)
+    if os.path.isdir(config.NORMALIZED_LABELED_TRAIN_DATA):
+        shutil.rmtree(config.NORMALIZED_LABELED_TRAIN_DATA)
+        os.makedirs(config.NORMALIZED_LABELED_TRAIN_DATA)
+    if os.path.isdir(config.NORMALIZED_LABELED_TEST_DATA):
+        shutil.rmtree(config.NORMALIZED_LABELED_TEST_DATA)
+        os.makedirs(config.NORMALIZED_LABELED_TEST_DATA)
 
-    TRAIN_FILES = glob.glob(os.path.join(DATA_FILE, "*2018*2018*"))
+    TRAIN_FILES = glob.glob(os.path.join(config.ALLIGNED_SPEED, "*2018*2018*"))
     p = Pool(4)
     p.map(rotate_train_matrix, TRAIN_FILES)
     p.close()
     p.join()
 
-    TEST_FILES = glob.glob(os.path.join(DATA_TEST_FILE, "*2018*2018*"))
+    TEST_FILES = glob.glob(os.path.join(config.ALLIGNED_SPEED_TEST, "*2018*2018*"))
     p = Pool(4)
     p.map(rotate_test_matrix, TEST_FILES)
     p.close()
     p.join()
 
-    for file in glob.glob(os.path.join(DATA_FILE, "*gps*")):
+    for file in glob.glob(os.path.join(config.ALLIGNED_SPEED, "*gps*")):
         print file
-        shutil.copy2(file, OUT_FILE)
+        shutil.copy2(file, config.NORMALIZED_LABELED_TRAIN_DATA)
 
-    for file in glob.glob(os.path.join(DATA_TEST_FILE, "*gps*")):
+    for file in glob.glob(os.path.join(config.ALLIGNED_SPEED_TEST, "*gps*")):
         print file
-        shutil.copy2(file, OUT_TEST_FILE)
+        shutil.copy2(file, config.NORMALIZED_LABELED_TEST_DATA)

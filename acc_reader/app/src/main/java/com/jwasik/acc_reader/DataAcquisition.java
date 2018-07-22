@@ -35,55 +35,69 @@ class DataAcquisition{
     public Handler fileSizeHandler;
     public DateFormat df;
     long i = 0;
+    public float x,y,z;
+    public String MODE;
     public File newfile;
     private File fobj;
     private boolean configured = false;
     FileOutputStream stream;
     private Handler threadHandler ;
-    DataAcquisition(MainActivity context, Handler mainHandler) {
+    DataAcquisition(MainActivity context, Handler mainHandler, String MODE) {
         mContext = context;
+        this.MODE=MODE;
         this.mainHandler = mainHandler;
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
-        fobj = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), "testy");
-        df = new DateFormat();
-    }
+        if(this.MODE != "CONTINIOUS_DATA"){
+            fobj = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), "testy");
+            df = new DateFormat();
+        }
 
+    }
 
     public boolean configure() {
         if (!mContext.isExternalStorageWritable() || !mContext.isExternalStorageReadable()) {
             return false;
         }
-        String date = df.format("yyyy-MM-dd-HH-mm-ss", new java.util.Date()).toString();
-        Log.e("FileName", date);
-        String filename = "raw_data_" + date + ".csv";
+        if(this.MODE != "CONTINIOUS_DATA"){
+            String date = df.format("yyyy-MM-dd-HH-mm-ss", new java.util.Date()).toString();
+            Log.e("FileName", date);
+            String filename = "raw_data_" + date + ".csv";
+            fobj.mkdirs();
+            newfile = new File(fobj, filename);
+            try{
+                stream = new FileOutputStream(newfile);
+            }catch(Exception ex){
+                Log.e("tag",  ex.getMessage() );
+            }
+        }
         mHandlerThread = new HandlerThread("AccelerometerLogListener");
         mHandlerThread.start();
         threadHandler = new Handler(mHandlerThread.getLooper());
-        fobj.mkdirs();
-        newfile = new File(fobj, filename);
-        try{
-            stream = new FileOutputStream(newfile);
-        }catch(Exception ex){
-            Log.e("tag",  ex.getMessage() );
-        }
         Log.e("tesst", mSensorManager.getSensorList(Sensor.TYPE_GYROSCOPE_UNCALIBRATED).toString());
         mListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
-                if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                    try{
-                        Date currentTime = Calendar.getInstance().getTime();
-                        String date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss:SSS").format(currentTime);
-                        String toWrite =  date
-                                + ";" + String.valueOf(sensorEvent.values[0])
-                                + ";" + String.valueOf(sensorEvent.values[1])
-                                + ";" + String.valueOf(sensorEvent.values[2])
-                                + "\r\n";
-                        stream.write(toWrite.getBytes());
-                    }catch(Exception ex){
-                        Log.e("TE3ST", ex.getMessage().toString());
+                if(MODE != "CONTINIOUS_DATA"){
+                    if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                        try{
+                            Date currentTime = Calendar.getInstance().getTime();
+                            String date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss:SSS").format(currentTime);
+                            String toWrite =  date
+                                    + ";" + String.valueOf(sensorEvent.values[0])
+                                    + ";" + String.valueOf(sensorEvent.values[1])
+                                    + ";" + String.valueOf(sensorEvent.values[2])
+                                    + "\r\n";
+                            stream.write(toWrite.getBytes());
+                        }catch(Exception ex){
+                            Log.e("TEST", ex.getMessage().toString());
+                        }
                     }
-
+                }else{
+                    if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                        x = sensorEvent.values[0];
+                        y = sensorEvent.values[1];
+                        z = sensorEvent.values[2];
+                    }
                 }
             }
             @Override
@@ -121,12 +135,14 @@ class DataAcquisition{
     public void cleanThread(){
 
         //Unregister the listener
-        if(configured) {
-            try{
-                stream.close();
-            }catch (Exception ex){
-                //todo
-            }
+        if(this.MODE != "CONTINIOUS DATA"){
+            if(configured) {
+                try{
+                    stream.close();
+                }catch (Exception ex){
+                    //todo
+                }
+        }
             mSensorManager.unregisterListener(mListener);
         }
 

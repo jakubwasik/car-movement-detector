@@ -23,7 +23,7 @@ public class TCPClient{
     private BufferedWriter out;
     private Socket socket;
     public boolean mRun;
-    private TcpClientState state;
+    public TcpClientState state;
     public HandlerThread connectionHT;
     public HandlerThread sendHT;
     public HandlerThread receiveHT;
@@ -50,7 +50,7 @@ public class TCPClient{
     public void connect(TcpClientMode mode)
     {
          if(state == TcpClientState.DISCONNECTED){
-            state = TcpClientState.CONNECTED;
+
             connectionHT = new HandlerThread("Connection with: " + serverIP);
             connectionHT.start();
             connectionHandler = new Handler(connectionHT.getLooper());
@@ -59,6 +59,7 @@ public class TCPClient{
             if(mode == TcpClientMode.DATA_MODE){
                 receiveFromServer();
             }
+             state = TcpClientState.CONNECTED;
         }
         else{
             Log.e("[TCPClient.connect]","Connection already exists!");
@@ -85,7 +86,9 @@ public class TCPClient{
     }
     public void sendMessage(String msg)
     {
+
         if(state == TcpClientState.CONNECTED)
+
             connectionHandler.post(new sendMessage(msg));
         else
             Log.e("[TCPClient.sendMessage]", "Connection already disconnected!");
@@ -127,9 +130,10 @@ public class TCPClient{
         @Override
         public void run(){
             try{
-                Log.e("In connect runnable", Thread.currentThread().getName());
+
                 InetAddress serverAddr = InetAddress.getByName(serverIP);
                 socket = new Socket(serverIP, serverPort);
+                Log.e("DDDDDD", Thread.currentThread().getName());
                 out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 String modeToSend;
@@ -139,6 +143,7 @@ public class TCPClient{
                     modeToSend = "Send Continuous Data";
                 out.write(modeToSend);
                 out.flush();
+
             }catch (Exception ex){
                 ex.printStackTrace();
                 state = TcpClientState.FAILED;
@@ -164,6 +169,9 @@ public class TCPClient{
                     if(Integer.parseInt(bufferStr) == msgSize){
                         out.write(message, 0 ,msgSize);
                         out.flush();
+                    }
+                    else{
+                        Log.e("DEBUG", "Server odesłał zła ilość danych.");
                     }
                     Log.e("from server", Thread.currentThread().getName());
                 }catch(Exception ex){
