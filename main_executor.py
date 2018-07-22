@@ -7,8 +7,6 @@ import sys
 from sklearn import svm
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.preprocessing import StandardScaler
-from sqlalchemy.sql.functions import sysdate
-
 import calculate_perf_other_side
 import calculate_performance
 import getpass
@@ -177,10 +175,7 @@ class MainExecutor(object):
 
     def collect_results(self):
         self.logger.info("Collecting results...")
-       # p1 = Process(target=calculate_perf_other_side.get_success_rate_from_labeled_events)
-       # p2 = Process(target=calculate_performance.get_success_rate_from_raw_events)
         p1 = Pool(4)
-
         p1.map(calculate_performance.get_success_rate_from_raw_events,
                [(elem, self.q_all) for elem in glob.glob(os.path.join(config.EVENTS_F_R_DATA_TEST, "*"))])
         p2 = Pool(4)
