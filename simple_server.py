@@ -77,14 +77,15 @@ class Client(threading.Thread):
                     print "Zerwano polaczenie z serverem?"
                     running = 0
             print dataReceived
-            if len(dataReceived) == expectedData:
-                self.client.send("przeslano plik pomyslnie")
-            import re
-            dataReceived = re.sub(',','.',dataReceived)
-            dataReceived = re.sub(':', ',', dataReceived)
-            dataReceived = re.sub('\n', ';\n', dataReceived)
-            with open('some.csv', 'w') as f:
-                f.writelines(dataReceived)
+            #if len(dataReceived)
+            # == expectedData:
+            #    self.client.send("przeslano plik pomyslnie")
+            #import re
+            #dataReceived = re.sub(',','.',dataReceived)
+            #dataReceived = re.sub(':', ',', dataReceived)
+            #dataReceived = re.sub('\n', ';\n', dataReceived)
+            #with open('some.csv', 'w') as f:
+            #    f.writelines(dataReceived)
         self.client.close()
 
 
