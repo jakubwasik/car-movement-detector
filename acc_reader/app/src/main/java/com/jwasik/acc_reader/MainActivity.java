@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
         gps = new GPSManager(this, "CONTINIOUS_DATA");
         gps.requestPermissions();
         mainHandler = new Handler();
-        client = new TCPClient("192.168.1.8", 8888);
+        client = new TCPClient("192.168.1.7", 8888);
         client.connect(TCPClient.TcpClientMode.FILE_MODE);
     }
 
@@ -292,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
                 speed.setText(String.valueOf(gps.speed*3.6));
                 if(gps.latitude!= 0 && gps.longitude!=0 ){
                     String toWrite =
-                            ";" + String.valueOf(configurator.x)
+                            String.valueOf(configurator.x)
                                     + ";" + String.valueOf(configurator.y)
                                     + ";" + String.valueOf(configurator.z)
                                     + ";" + String.valueOf(gps.latitude)
