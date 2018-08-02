@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
         gps = new GPSManager(this, "CONTINIOUS_DATA");
         gps.requestPermissions();
         mainHandler = new Handler();
-        client = new TCPClient("192.168.1.7", 8888);
+        client = new TCPClient("13.58.76.62", 8888);
         client.connect(TCPClient.TcpClientMode.FILE_MODE);
     }
 
