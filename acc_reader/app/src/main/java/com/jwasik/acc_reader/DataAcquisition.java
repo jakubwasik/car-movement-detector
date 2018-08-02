@@ -24,14 +24,45 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+class Buffer{
+    public ArrayList<String> data;
+    public int windowSize;
+    public int slidingWindow;
+    Buffer(int size, int windowSize, int slidingWindow){
+         data = new ArrayList<String>(size);
+         this.windowSize = windowSize;
+         this.slidingWindow = slidingWindow;
+    }
+    public void addElem(String elem){
+        if(data.size()<this.windowSize)
+            data.add(elem);
+        else{
+            data.remove(0);
+            data.add(elem);
+        }
+    }
+    public String getDataToSend(){
+        String toSend = new String();
+        for(int i=0; i<data.size(); i++)
+            toSend += data.get(i);
+        for(int i=0; i<slidingWindow; i++)
+            data.remove(0);
+        return toSend;
+    }
+    public boolean readyToSend(){
+        return data.size()==this.windowSize ? true: false;
+    }
+}
 
 class DataAcquisition{
 
     private MainActivity mContext;
+    private GPSManager gps;
     private SensorManager mSensorManager = null;
     private SensorEventListener mListener;
     private HandlerThread mHandlerThread;
     public Handler mainHandler;
+    public Buffer data;
     public Handler fileSizeHandler;
     public DateFormat df;
     long i = 0;
@@ -39,19 +70,22 @@ class DataAcquisition{
     public String MODE;
     public File newfile;
     private File fobj;
+    public TCPClient client;
     private boolean configured = false;
     FileOutputStream stream;
     private Handler threadHandler ;
-    DataAcquisition(MainActivity context, Handler mainHandler, String MODE) {
+    DataAcquisition(MainActivity context, Handler mainHandler, String MODE, TCPClient client, GPSManager gps) {
+        this.client = client;
+        this.gps = gps;
         mContext = context;
         this.MODE=MODE;
+        data = new Buffer(260, 250,100);
         this.mainHandler = mainHandler;
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
         if(this.MODE != "CONTINIOUS_DATA"){
             fobj = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), "testy");
             df = new DateFormat();
         }
-
     }
 
     public boolean configure() {
@@ -94,9 +128,23 @@ class DataAcquisition{
                     }
                 }else{
                     if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                        x = sensorEvent.values[0];
-                        y = sensorEvent.values[1];
-                        z = sensorEvent.values[2];
+                        if(gps.latitude!= 0 && gps.longitude!=0 ){
+                            Date currentTime = Calendar.getInstance().getTime();
+                            String date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss:SSS").format(currentTime);
+                            String toWrite =  date
+                                    + ";" + String.valueOf(sensorEvent.values[0])
+                                    + ";" + String.valueOf(sensorEvent.values[1])
+                                    + ";" + String.valueOf(sensorEvent.values[2])
+                                    + ";" + String.valueOf(gps.latitude)
+                                    + ";" + String.valueOf(gps.longitude)
+                                    + ";" + String.valueOf(gps.speed)
+                                    + "\r\n";
+                            data.addElem(toWrite);
+                        }
+                        if(data.readyToSend() == true){
+                            client.sendMessage(data.getDataToSend());
+                        }
+                        i++;
                     }
                 }
             }

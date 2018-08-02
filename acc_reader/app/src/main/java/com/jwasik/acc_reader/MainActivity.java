@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
                     if (!configurator.configure())
                         Toast.makeText(getApplicationContext(), "Unable to start thread(no r/w permission)", Toast.LENGTH_LONG);
                     gps.configure();
+                    client.connect(TCPClient.TcpClientMode.FILE_MODE);
                     if(MODE != "CONTINIOUS DATA"){
                         configure_event_file();
                     }
@@ -104,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
                     if(MODE != "CONTINIOUS DATA"){
                         closeFile();
                     }
+                    client.disconnect();
                     mainHandler.removeCallbacks(updateGUIRunnable);
                     Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
                     Log.e("active threads", threadSet.toString());
@@ -161,12 +163,12 @@ public class MainActivity extends AppCompatActivity {
         latitude = findViewById(R.id.latitude);
         longitude = findViewById(R.id.longitude);
         speed = findViewById(R.id.speed);
-        configurator = new DataAcquisition(MainActivity.this, mainHandler, "CONTINIOUS_DATA");
+        client = new TCPClient("192.168.43.38", 8888);
+        client.connect(TCPClient.TcpClientMode.FILE_MODE);
         gps = new GPSManager(this, "CONTINIOUS_DATA");
         gps.requestPermissions();
+        configurator = new DataAcquisition(MainActivity.this, mainHandler, "CONTINIOUS_DATA", client, gps);
         mainHandler = new Handler();
-        client = new TCPClient("192.168.1.7", 8888);
-        client.connect(TCPClient.TcpClientMode.FILE_MODE);
     }
 
     @Override
@@ -287,25 +289,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             try {
-                latitude.setText(String.valueOf(gps.latitude));
+                latitude.setText(String.valueOf(client.event_detected));
                 longitude.setText(String.valueOf(gps.longitude));
                 speed.setText(String.valueOf(gps.speed*3.6));
-                if(gps.latitude!= 0 && gps.longitude!=0 ){
-                    String toWrite =
-                            String.valueOf(configurator.x)
-                                    + ";" + String.valueOf(configurator.y)
-                                    + ";" + String.valueOf(configurator.z)
-                                    + ";" + String.valueOf(gps.latitude)
-                                    + ";" + String.valueOf(gps.longitude)
-                                    + ";" + String.valueOf(gps.speed)
-                                    + "\r\n";
-                    client.sendMessage(toWrite);
-                }
             } catch (Exception e) {
                 // TODO: handle exception
             } finally {
                 //also call the same runnable to call it at regular interval
-                mainHandler.postDelayed(this, 20);
+                mainHandler.postDelayed(this, 30);
             }
         }
     }

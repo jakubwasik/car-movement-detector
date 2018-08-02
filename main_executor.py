@@ -4,6 +4,8 @@ import pandas as pd
 from datetime import datetime
 
 import sys
+
+import pickle
 from sklearn import svm
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -129,6 +131,8 @@ class MainExecutor(object):
             self.clf.fit(self.train_features_vector["features"], self.train_features_vector["tags"])
         self.logger.info(self.clf.best_score_)
         self.logger.info(self.clf.best_params_)
+        pickle.dump(self.clf, open("svm_classfier.mdl", 'wb'))
+        pickle.dump(self.scaler, open("scaler.mdl", 'wb'))
 
     def test_SVM_classfier(self):
         if self.normalize_data and self.scaler:
