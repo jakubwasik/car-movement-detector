@@ -10,6 +10,9 @@ import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Created by kuba on 2018-02-01.
@@ -18,6 +21,7 @@ import java.io.*;
 public class TCPClient{
 
     private String serverIP;
+    public String event_detected;
     private int serverPort;
     private BufferedReader in;
     private BufferedWriter out;
@@ -158,22 +162,31 @@ public class TCPClient{
         @Override
         public void run(){
                 try{
+                    Date currentTime = Calendar.getInstance().getTime();
+                    String date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss:SSS").format(currentTime);
+                    Log.e("START DATE", date);
                     int msgSize = message.length();
-                    Log.e("przed wyslaniem", message);
                     out.write("Wysylam CSV: " + String.valueOf(msgSize));
                     out.flush();
                     char[] buffer = new char[1024];
                     int charsReaded = in.read(buffer, 0,  1024);
                     String bufferStr = new String(buffer, 0, charsReaded);
                     Log.e("Ile odczytalo znakow", String.valueOf(bufferStr));
-                    if(Integer.parseInt(bufferStr) == msgSize){
-                        out.write(message, 0 ,msgSize);
+                    if(Integer.parseInt(bufferStr) == msgSize) {
+                        out.write(message, 0, msgSize);
                         out.flush();
                     }
                     else{
                         Log.e("DEBUG", "Server odesłał zła ilość danych.");
                     }
+                    currentTime = Calendar.getInstance().getTime();
+                    date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss:SSS").format(currentTime);
+                    Log.e("STOP DATE", date);
                     Log.e("from server", Thread.currentThread().getName());
+                    buffer = new char[1024];
+                    charsReaded = in.read(buffer, 0,  1024);
+                    event_detected = new String(buffer, 0, charsReaded);
+                    Log.e("EVENT DETECTED:", event_detected);
                 }catch(Exception ex){
                     ex.printStackTrace();
                     state = TcpClientState.FAILED;

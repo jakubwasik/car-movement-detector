@@ -6,7 +6,18 @@ import time
 #s.bind(('', 8888))
 #s.listen(5)
 import sys
+import pandas as pd
+import sys
 
+import pickle
+
+import config
+import sliding_window
+
+if sys.version_info[0] < 3:
+    from StringIO import StringIO
+else:
+    from io import StringIO
 #while i<2:
 #	client,addr = s.accept() # odebranie polaczenia
 #	print client.recv(100)
@@ -14,7 +25,7 @@ import sys
 #	# wyslanie danych do klienta
 
 
-class Server:
+class Server(object):
     def __init__(self):
         self.host = ''
         self.port = 8888
@@ -76,18 +87,44 @@ class Client(threading.Thread):
                 if len(data) == 0:
                     print "Zerwano polaczenie z serverem?"
                     running = 0
-            print dataReceived
-            if len(dataReceived) == expectedData:
-                self.client.send("przeslano plik pomyslnie")
-            import re
-            dataReceived = re.sub(',','.',dataReceived)
-            dataReceived = re.sub(':', ',', dataReceived)
-            dataReceived = re.sub('\n', ';\n', dataReceived)
-            with open('some.csv', 'w') as f:
-                f.writelines(dataReceived)
+            #print dataReceived
+            self.client.send("Wykryto zdarzenie: %s" % predict_event(dataReceived))
+            #if len(dataReceived)
+            # == expectedData:
+            #    self.client.send("przeslano plik pomyslnie")
+            #import re
+            #dataReceived = re.sub(',','.',dataReceived)
+            #dataReceived = re.sub(':', ',', dataReceived)
+            #dataReceived = re.sub('\n', ';\n', dataReceived)
+            #with open('some.csv', 'w') as f:
+            #    f.writelines(dataReceived)
         self.client.close()
 
+class ProcessData(threading.Thread):
+    def __init__(self, data):
+        threading.Thread.__init__(self)
 
+        #print self.data
+
+    def run(self):
+        features = sliding_window.features_from_window(self.data[self.data.columns[0:4]],
+                                                            self.data[['time','latitude','longitude','speed']],
+                                                            config.FEATURES)
+        clf = pickle.load(open("svm_classfier.mdl", 'rb'))
+        scaler = pickle.load(open("scaler.mdl", 'rb'))
+        print clf.predict(scaler.transform(features.reshape(1, -1)
+                                           ))
+
+def predict_event(raw_data):
+    data = pd.read_csv(StringIO(raw_data), sep=';', header=None,
+                            names=['time', 'x', 'y', 'z', 'latitude', 'longitude', 'speed'])
+    features = sliding_window.features_from_window(data[data.columns[0:4]],
+                                                   data[['time', 'latitude', 'longitude', 'speed']],
+                                                   config.FEATURES)
+    clf = pickle.load(open("svm_classfier.mdl", 'rb'))
+    scaler = pickle.load(open("scaler.mdl", 'rb'))
+    return clf.predict(scaler.transform(features.reshape(1, -1)))[0]
 if __name__ == "__main__":
     s = Server()
     s.run()
+
