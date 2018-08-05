@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity
         implements OnlineMode.OnFragmentInteractionListener,
          DataAcquisitionMode.OnFragmentInteractionListener,
          NavigationView.OnNavigationItemSelectedListener {
-    private String SERVER_IP = "0.0.0.0";
+    private String SERVER_IP = "18.191.108.159";
     private String CLS = "SVM";
     private boolean RET_FROM_SETTINGS = false;
     private String ActiveFragment;

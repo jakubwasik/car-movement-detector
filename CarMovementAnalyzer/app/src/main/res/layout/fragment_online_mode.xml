@@ -105,7 +105,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="TextView"
-                    tools:text="0.0.0.0" />
+                    tools:text="18.191.108.159" />
             </TableRow>
 
             <TableRow

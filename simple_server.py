@@ -51,7 +51,8 @@ class Server(object):
         while running:
             (client, address) = self.server.accept()
             clientMode = client.recv(self.size)
-            if clientMode == "Send File":
+            print clientMode
+            if "SVM" in clientMode and "Enabled" in clientMode:
                 ct = Client((client, address))
                 ct.start()
                 self.threads.append(ct)
@@ -77,17 +78,18 @@ class Client(threading.Thread):
             print "MODE: ", mode
             dataReceived = ""
             expectedData = int(mode.split(':')[1])
-            print "data :" + str(expectedData)
+            print "Received message:" + str(expectedData)
             self.client.send(str(expectedData))
             while len(dataReceived) < expectedData and running:
-                print "Petla WHILE"
+                #print "Petla WHILE"
                 data = self.client.recv(self.size)
-                print len(data)
+                #print len(data)
                 dataReceived += data
                 if len(data) == 0:
                     print "Zerwano polaczenie z serverem?"
                     running = 0
             #print dataReceived
+            print "Wykryto zdarzenie: %s" % predict_event(dataReceived)
             self.client.send("Wykryto zdarzenie: %s" % predict_event(dataReceived))
             #if len(dataReceived)
             # == expectedData:
@@ -98,6 +100,7 @@ class Client(threading.Thread):
             #dataReceived = re.sub('\n', ';\n', dataReceived)
             #with open('some.csv', 'w') as f:
             #    f.writelines(dataReceived)
+        print "Client closed a connection."
         self.client.close()
 
 class ProcessData(threading.Thread):

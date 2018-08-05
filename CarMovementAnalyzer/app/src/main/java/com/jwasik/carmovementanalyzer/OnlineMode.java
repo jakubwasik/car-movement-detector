@@ -124,7 +124,6 @@ public class OnlineMode extends Fragment {
                     configurator.cleanThread();
                     gps.cleanThread();
                     client.disconnect();
-                    mainHandler.removeCallbacks(updateGUIRunnable);
                     Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
                     Log.e("active threads", threadSet.toString());
                 }
