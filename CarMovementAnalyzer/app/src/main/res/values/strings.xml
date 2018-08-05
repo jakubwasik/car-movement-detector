@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">CarMovementAnalyzer</string>
+<bool name="VERBOSE">true</bool>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="SERVER_IP_KEY">SERVER IP</string>
+    <string name="CLS_KEY">CLASSIFIER</string>
+    <string name="USE_GPS_KEY">USE GPS</string>
+    <string name="MAIN_ACTIVITY">In MainActivity</string>
+    <string name="SETTINGS_ACTIVITY">In SettingsActivity</string>
+    <string name="action_settings">Settings</string>
+    <string name="DATA_ACTIVITY_FRAGMENT">In Data Activity Fragment</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello DA</string>
+    <string-array name="choices">
+        <item>SVM</item>
+        <item>Syntatic Method</item>
+        <item>Neural Network</item>
+    </string-array>
+    <string-array name="TAGS">
+        <item>skret w lewo</item>
+        <item>skret w prawo</item>
+        <item>zmiana pasa na lewy</item>
+        <item>zmiana pasa na prawy</item>
+        <item>hamowanie</item>
+        <item>zatrzymanie na swiatlach</item>
+        <item>idle</item>
+        <item>przyspieszanie na swiatlach</item>
+    </string-array>
+    <integer name="READING_PERMISSIONS">1</integer>
+    <integer name="WRITING_PERMISSIONS">2</integer>
+</resources>

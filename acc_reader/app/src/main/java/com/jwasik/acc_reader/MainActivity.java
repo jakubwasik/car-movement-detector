@@ -163,14 +163,12 @@ public class MainActivity extends AppCompatActivity {
         latitude = findViewById(R.id.latitude);
         longitude = findViewById(R.id.longitude);
         speed = findViewById(R.id.speed);
-        client = new TCPClient("192.168.43.38", 8888);
+        client = new TCPClient("13.58.76.62", 8888);
         client.connect(TCPClient.TcpClientMode.FILE_MODE);
         gps = new GPSManager(this, "CONTINIOUS_DATA");
         gps.requestPermissions();
         configurator = new DataAcquisition(MainActivity.this, mainHandler, "CONTINIOUS_DATA", client, gps);
         mainHandler = new Handler();
-        client = new TCPClient("13.58.76.62", 8888);
-        client.connect(TCPClient.TcpClientMode.FILE_MODE);
     }
 
     @Override
