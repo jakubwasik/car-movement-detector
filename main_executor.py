@@ -1,12 +1,17 @@
 import logging, os, shutil, glob
 from multiprocessing import Pool, Process, Queue, Manager
+
+import itertools
 import pandas as pd
 from datetime import datetime
 
 import sys
-
+import numpy as np
+import matplotlib.pyplot as plt
 import pickle
+from sklearn.model_selection import learning_curve
 from sklearn import svm
+from sklearn.metrics import mean_squared_error, confusion_matrix
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.preprocessing import StandardScaler
 import calculate_perf_other_side
@@ -134,6 +139,109 @@ class MainExecutor(object):
         pickle.dump(self.clf, open("svm_classfier.mdl", 'wb'))
         pickle.dump(self.scaler, open("scaler.mdl", 'wb'))
 
+    def plot_learning_curve(self, title, ylim=None, cv=None,
+                            n_jobs=1, train_sizes=np.linspace(.1, 1.0, 5)):
+        """
+        Generate a simple plot of the test and training learning curve.
+
+        Parameters
+        ----------
+        estimator : object type that implements the "fit" and "predict" methods
+            An object of that type which is cloned for each validation.
+
+        title : string
+            Title for the chart.
+
+        X : array-like, shape (n_samples, n_features)
+            Training vector, where n_samples is the number of samples and
+            n_features is the number of features.
+
+        y : array-like, shape (n_samples) or (n_samples, n_features), optional
+            Target relative to X for classification or regression;
+            None for unsupervised learning.
+
+        ylim : tuple, shape (ymin, ymax), optional
+            Defines minimum and maximum yvalues plotted.
+
+        cv : int, cross-validation generator or an iterable, optional
+            Determines the cross-validation splitting strategy.
+            Possible inputs for cv are:
+              - None, to use the default 3-fold cross-validation,
+              - integer, to specify the number of folds.
+              - An object to be used as a cross-validation generator.
+              - An iterable yielding train/test splits.
+
+            For integer/None inputs, if ``y`` is binary or multiclass,
+            :class:`StratifiedKFold` used. If the estimator is not a classifier
+            or if ``y`` is neither binary nor multiclass, :class:`KFold` is used.
+
+            Refer :ref:`User Guide <cross_validation>` for the various
+            cross-validators that can be used here.
+
+        n_jobs : integer, optional
+            Number of jobs to run in parallel (default 1).
+        """
+        plt.figure()
+        plt.title(title)
+        if ylim is not None:
+            plt.ylim(*ylim)
+        plt.xlabel("Training examples")
+        plt.ylabel("Score")
+        svr = svm.SVC()
+        exponential_range = [pow(10, i) for i in range(-4, 1)]
+        # exponential_range = np.logspace(-10, 1, 35 )
+        parameters = {'kernel': ['linear', 'rbf', ], 'C': exponential_range, 'gamma': exponential_range}
+        self.clf = GridSearchCV(svr, parameters, n_jobs=4, verbose=1)
+        train_sizes, train_scores, test_scores = learning_curve(
+            self.clf,
+            np.append(self.train_features_vector["features"], self.test_features_vector["features"], axis=0),
+            self.train_features_vector["tags"] + self.test_features_vector["tags"],
+            cv=cv, n_jobs=n_jobs, train_sizes=train_sizes, shuffle=True)
+        train_scores_mean = np.mean(train_scores, axis=1)
+        train_scores_std = np.std(train_scores, axis=1)
+        test_scores_mean = np.mean(test_scores, axis=1)
+        test_scores_std = np.std(test_scores, axis=1)
+        plt.grid()
+
+        plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
+                         train_scores_mean + train_scores_std, alpha=0.1,
+                         color="r")
+        plt.fill_between(train_sizes, test_scores_mean - test_scores_std,
+                         test_scores_mean + test_scores_std, alpha=0.1, color="g")
+        plt.plot(train_sizes, train_scores_mean, 'o-', color="r",
+                 label="Training score")
+        plt.plot(train_sizes, test_scores_mean, 'o-', color="g",
+                 label="Cross-validation score")
+
+        plt.legend(loc="best")
+        plt.show()
+        return plt
+    def plot_learning_curves(self):
+        X_train, X_val, y_train, y_val = train_test_split(np.append(self.train_features_vector["features"], self.test_features_vector["features"], axis=0),
+                                                          self.train_features_vector["tags"]+self.test_features_vector["tags"],
+                                                          test_size=0.2,
+                                                          shuffle=False)
+        train_errors, val_errors = [], []
+        svr = svm.SVC()
+        exponential_range = [pow(10, i) for i in range(-4, 1)]
+        # exponential_range = np.logspace(-10, 1, 35 )
+        parameters = {'kernel': ['linear', 'rbf', ], 'C': exponential_range, 'gamma': exponential_range}
+        self.clf = GridSearchCV(svr, parameters, n_jobs=4, verbose=1)
+        for m in range(200, len(X_train)):
+            self.scaler = StandardScaler().fit(X_train[:m])
+            self.clf.fit(self.scaler.transform(X_train[:m]), y_train[:m])
+            y_train_predict = self.clf.predict(self.scaler.transform(X_train[:m]))
+            y_val_predict = self.clf.predict(self.scaler.transform(X_val))
+            train_errors.append(mean_squared_error(y_train_predict, y_train[:m]))
+            val_errors.append(mean_squared_error(y_val_predict, y_val))
+        plt.plot(np.sqrt(train_errors), "r-", linewidth=2, label="train")
+        plt.plot(np.sqrt(val_errors), "b-", linewidth=3, label="val")
+        plt.ylim(0, 1)
+        plt.legend(loc="upper right", fontsize=14)
+        plt.xlabel("Training set size", fontsize=14)
+        plt.ylabel("RMSE(log(y))", fontsize=14)
+        plt.show()
+
     def test_SVM_classfier(self):
         if self.normalize_data and self.scaler:
             test_output = self.clf.predict(self.scaler.transform(self.test_features_vector["features"]))
@@ -209,17 +317,25 @@ class MainExecutor(object):
         all_events_q_only_events = 0
         specific_events = {}
         specific_events_all = {}
+        self.actual = []
+        self.predicted = []
         i = 0
         while not self.q_only_events.empty():
-            temp1, temp2 = self.q_only_events.get()
+            temp1, temp2, temp3, temp4 = self.q_only_events.get()
             if i == 0:
                 specific_events = temp1
                 specific_events_all = temp2
+                self.actual.extend(temp3)
+                self.predicted.extend(temp4)
+
             else:
                 for key, value in temp1.iteritems():
                     specific_events[key] += value
                 for key, value in temp2.iteritems():
                     specific_events_all[key] += value
+                print len(temp3)
+                self.actual.extend(temp3)
+                self.predicted.extend(temp4)
             i+=1
         success_rate_only_events = float(specific_events["events"]) / float(specific_events["all_events"])
         print("SUCCESS RATE NOTICED EVENTS: {0}".format(success_rate_only_events))
@@ -241,14 +357,54 @@ class MainExecutor(object):
         print datetime.now() - self.now
         return success_rate_all
 
+    def plot_confusion_matrix(self, classes=range(8),
+                              normalize=False,
+                              title='Confusion matrix',
+                              cmap=plt.cm.hot):
+        """
+        This function prints and plots the confusion matrix.
+        Normalization can be applied by setting `normalize=True`.
+        """
+        cnf_matrix = confusion_matrix(self.actual, self.predicted)
+        np.set_printoptions(precision=2)
+        if normalize:
+            cnf_matrix = cnf_matrix.astype('float') / cnf_matrix.sum(axis=1)[:, np.newaxis]
+            print("Normalized confusion matrix")
+        else:
+            print('Confusion matrix, without normalization')
+
+        print(cnf_matrix)
+
+        plt.imshow(cnf_matrix, interpolation='nearest', cmap=cmap)
+        plt.title(title)
+        plt.colorbar()
+        tick_marks = np.arange(len(classes))
+        plt.xticks(tick_marks, classes, rotation=45)
+        plt.yticks(tick_marks, classes)
+
+        fmt = '.2f' if normalize else 'd'
+        thresh = cnf_matrix.max() / 2.
+        for i, j in itertools.product(range(cnf_matrix.shape[0]), range(cnf_matrix.shape[1])):
+            plt.text(j, i, format(cnf_matrix[i, j], fmt),
+                     horizontalalignment="center",
+                     color="white" if cnf_matrix[i, j] > thresh else "black")
+
+        plt.tight_layout()
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+        plt.show()
+
 
 if __name__ == '__main__':
     me = MainExecutor(features=config.FEATURES)
+    # me.plot_learning_curve("test", n_jobs=4)
+    # sys.exit(0)
     me.train_SVM_classifier()
     me.test_SVM_classfier()
     me.generate_event_file()
     me.run_sliding_window()
     me.collect_results()
+    me.plot_confusion_matrix()
     sys.exit(0)
     prev_value = 0
     reduced_features = config.FEATURES

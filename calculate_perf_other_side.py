@@ -55,7 +55,8 @@ def get_success_rate_from_labeled_events((event_file, queue)):
     all = 0
     k_binary = 0
     all_binary = 0
-
+    actual = []
+    predicted = []
     event_data = pd.read_csv(event_file)
     event_data["start"] = [datetime.strptime(TIME, config.DATE_FORMAT_MS_EVENT) for TIME in event_data["start"]]
     event_data["stop"] = [datetime.strptime(TIME, config.DATE_FORMAT_MS_EVENT) for TIME in event_data["stop"]]
@@ -102,8 +103,12 @@ def get_success_rate_from_labeled_events((event_file, queue)):
                 results_binary[event_data["event"][i]] += 1
                 # print "OK: ", event_data["event"][i], candidate.total_seconds() / WINDOW_SIZE if windows_length > candidate else 1
                 # event_data["event"][i] += "_OK"
+                actual.append(event_data["event"][i])
+                predicted.append(raw_event_data["event"][i_candidate])
             else:
+                counter = 0
                 for key in arr.keys():
+
                     if arr[key] > timedelta(seconds=numpy.floor(config.WINDOW_SIZE / 2.0)) and \
                             raw_event_data["event"][key] == event_data["event"][i]:
                         k += arr[key].total_seconds() / config.WINDOW_SIZE if windows_length > arr[key] else 1
@@ -113,11 +118,19 @@ def get_success_rate_from_labeled_events((event_file, queue)):
                                                                                                             arr[
                                                                                                                 key] else 1
                         results_binary[event_data["event"][i]] += 1
+                        actual.append(event_data["event"][i])
+                        predicted.append(raw_event_data["event"][key])
                         # print "TEST: ", event_data["event"][i], arr[key].total_seconds() / WINDOW_SIZE if windows_length > arr[key] else 1
                         # event_data["event"][i] += "_OK"
                         break
+                    else:
+                        counter += 1
+                if counter == len(arr.keys()):
+                    actual.append(event_data["event"][i])
+                    predicted.append(raw_event_data["event"][i_candidate])
                 # print event_data["event"][i],  labeled_event_data["event"][i_candidate]
             # print labeled_event_data["event"][i_candidate]
+
         all += 1
         all_binary += 1
         # event_data.to_csv(os.path.join(LABELED_FILE, os.path.basename(event_file)), index=False)
@@ -127,9 +140,10 @@ def get_success_rate_from_labeled_events((event_file, queue)):
        # for key in results_binary:
        #     if total_results_binary[key] != 0:
        #         print key, float(results_binary[key]) / float(total_results_binary[key])
+    print "SUMMARY:", len(event_data), len(actual), len(predicted)
     results_binary.update({"events": k_binary,
                     "all_events": all})
-    queue.put([results_binary, total_results_binary])
+    queue.put([results_binary, total_results_binary,actual,predicted])
 ##print float(k) / float(all)
 # print results
 # print total_results
