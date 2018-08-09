@@ -140,7 +140,7 @@ def get_success_rate_from_labeled_events((event_file, queue)):
        # for key in results_binary:
        #     if total_results_binary[key] != 0:
        #         print key, float(results_binary[key]) / float(total_results_binary[key])
-    print "SUMMARY:", len(event_data), len(actual), len(predicted)
+    print "SUMMARY (CPOS):", len(event_data), len(actual), len(predicted)
     results_binary.update({"events": k_binary,
                     "all_events": all})
     queue.put([results_binary, total_results_binary,actual,predicted])

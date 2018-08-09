@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import pickle
 from sklearn.model_selection import learning_curve
 from sklearn import svm
-from sklearn.metrics import mean_squared_error, confusion_matrix
+from sklearn.metrics import mean_squared_error, confusion_matrix, classification_report
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.preprocessing import StandardScaler
 import calculate_perf_other_side
@@ -301,32 +301,38 @@ class MainExecutor(object):
         all_events_q_all = 0
         specific_events_1 = {}
         specific_events_1_all = {}
+        self.actual_all_events = []
+        self.predicted_all_events = []
         i = 0
         while not self.q_all.empty():
-            temp1, temp2 = self.q_all.get()
+            temp1, temp2, temp3, temp4 = self.q_all.get()
             if i ==0:
                 specific_events_1 = temp1
                 specific_events_1_all = temp2
+                self.actual_all_events.extend(temp3)
+                self.predicted_all_events.extend(temp4)
             else:
                 for key, value in temp1.iteritems():
                     specific_events_1[key] += value
                 for key, value in temp2.iteritems():
                     specific_events_1_all[key] += value
+                    self.actual_all_events.extend(temp3)
+                    self.predicted_all_events.extend(temp4)
             i += 1
         correct_events_q_only_events = 0
         all_events_q_only_events = 0
         specific_events = {}
         specific_events_all = {}
-        self.actual = []
-        self.predicted = []
+        self.actual_only_events = []
+        self.predicted_only_events = []
         i = 0
         while not self.q_only_events.empty():
             temp1, temp2, temp3, temp4 = self.q_only_events.get()
             if i == 0:
                 specific_events = temp1
                 specific_events_all = temp2
-                self.actual.extend(temp3)
-                self.predicted.extend(temp4)
+                self.actual_only_events.extend(temp3)
+                self.predicted_only_events.extend(temp4)
 
             else:
                 for key, value in temp1.iteritems():
@@ -334,8 +340,8 @@ class MainExecutor(object):
                 for key, value in temp2.iteritems():
                     specific_events_all[key] += value
                 print len(temp3)
-                self.actual.extend(temp3)
-                self.predicted.extend(temp4)
+                self.actual_only_events.extend(temp3)
+                self.predicted_only_events.extend(temp4)
             i+=1
         success_rate_only_events = float(specific_events["events"]) / float(specific_events["all_events"])
         print("SUCCESS RATE NOTICED EVENTS: {0}".format(success_rate_only_events))
@@ -357,15 +363,15 @@ class MainExecutor(object):
         print datetime.now() - self.now
         return success_rate_all
 
-    def plot_confusion_matrix(self, classes=range(8),
+    def plot_confusion_matrix(self, actual, predicted,classes=range(8),
                               normalize=False,
                               title='Confusion matrix',
-                              cmap=plt.cm.hot):
+                              cmap=plt.cm.YlOrBr):
         """
         This function prints and plots the confusion matrix.
         Normalization can be applied by setting `normalize=True`.
         """
-        cnf_matrix = confusion_matrix(self.actual, self.predicted)
+        cnf_matrix = confusion_matrix(actual, predicted)
         np.set_printoptions(precision=2)
         if normalize:
             cnf_matrix = cnf_matrix.astype('float') / cnf_matrix.sum(axis=1)[:, np.newaxis]
@@ -394,6 +400,9 @@ class MainExecutor(object):
         plt.xlabel('Predicted label')
         plt.show()
 
+    def generate_report(self, actual, predicted):
+        print classification_report(actual, predicted)
+
 
 if __name__ == '__main__':
     me = MainExecutor(features=config.FEATURES)
@@ -404,7 +413,9 @@ if __name__ == '__main__':
     me.generate_event_file()
     me.run_sliding_window()
     me.collect_results()
-    me.plot_confusion_matrix()
+    me.generate_report(me.actual_only_events, me.predicted_only_events)
+    me.plot_confusion_matrix(me.actual_all_events, me.predicted_all_events, title="ALL EVENTS")
+    me.plot_confusion_matrix(me.actual_only_events, me.predicted_only_events, title="REFERENCE IVENTS")
     sys.exit(0)
     prev_value = 0
     reduced_features = config.FEATURES

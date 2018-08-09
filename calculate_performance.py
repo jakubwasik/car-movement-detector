@@ -35,6 +35,8 @@ def get_success_rate_from_raw_events((event_file, queue)):
         "zmiana_pasa_na_prawy": 0,
         "zmiana_pasa_na_lewy": 0
     }
+    actual = []
+    predicted = []
     event_data = pd.read_csv(event_file)
     event_data["start"] = [datetime.strptime(TIME, config.DATE_FORMAT_MS) for TIME in event_data["start"]]
     event_data["stop"] = [datetime.strptime(TIME, config.DATE_FORMAT_MS) for TIME in event_data["stop"]]
@@ -76,28 +78,42 @@ def get_success_rate_from_raw_events((event_file, queue)):
                 results[event_data["event"][i]] += 1
                 # print event_data["event"][i]
                 # event_data["event"][i] += "_OK"
+                actual.append(labeled_event_data["event"][i_candidate])
+                predicted.append(event_data["event"][i])
             elif candidate < timedelta(seconds=3) and event_data["event"][i] == "indle":
                 k += 1
                 results[event_data["event"][i]] += 1
                 # event_data["event"][i] += "_OK"
+                actual.append("indle")
+                predicted.append(event_data["event"][i])
             else:
+                counter = 0
                 for index in arr.keys():
                     if arr[index] > timedelta(seconds=numpy.floor(config.WINDOW_SIZE / 2.0)) and \
                             event_data["event"][i] == labeled_event_data["event"][index]:
                         k += 1
                         results[event_data["event"][i]] += 1
                         # event_data["event"][i] += "_OK"
+                        actual.append(labeled_event_data["event"][index])
+                        predicted.append(event_data["event"][i])
                         break
+                    else:
+                        counter += 1
+                    if counter == len(arr.keys()):
+                        actual.append(labeled_event_data["event"][i_candidate])
+                        predicted.append(event_data["event"][i])
         else:
             if event_data["event"][i] == "indle":
                 results[event_data["event"][i]] += 1
-                # event_data["event"][i] += "_OK"
                 k += 1
+            actual.append("indle")
+            predicted.append(event_data["event"][i])
+                # event_data["event"][i] += "_OK"
                 # print "No candidate"
         all += 1
     # event_data.to_csv(os.path.join(OUT_FILE, os.path.basename(event_file)), index=False)
 
-
+    print "SUMMARY (CP):", len(event_data), len(actual), len(predicted)
     #print "\nSUCCESS RATE ALL EVENTS: ", float(k) / float(all)
 
     #print results
@@ -106,4 +122,4 @@ def get_success_rate_from_raw_events((event_file, queue)):
     #    print key, float(results[key]) / float(total_results[key])
     results.update({"events": k,
               "all_events": all})
-    queue.put([results, total_results])
+    queue.put([results, total_results, actual, predicted])
